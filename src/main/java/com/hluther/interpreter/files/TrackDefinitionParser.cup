@@ -1,0 +1,79 @@
+package com.hluther.interpreter.parser;
+
+import com.hluther.gui.MusicInterpreterFrame;
+import com.hluther.interpreter.lexer.TrackLexer;
+import java_cup.runtime.*;
+
+parser code {:
+    
+    public TrackParser(TrackLexer lexer) { 
+        super(lexer);
+    }
+
+
+    public void syntax_error(java_cup.runtime.Symbol s){
+       // musicInterpreterFrame.addError(new MError(s.left, s.right, ErrorType.SEMANTIC, "No se esperaba el lexema [" +s.value+ "]"));
+    }
+
+    public void unrecovered_syntax_error(java_cup.runtime.Symbol s){
+        //musicInterpreterFrame.addError(new MError(s.left, s.right, ErrorType.SEMANTIC, "No se esperaba el lexema [" +s.value+ "]"));
+    } 
+:}
+
+/* Terminals */
+terminal String STRING, ID;
+terminal Double DOUBLE;
+terminal Integer INTEGER;
+terminal Character CHARACTER; 
+    
+terminal ISEQUAL, NOTEQUAL, LESSTHAN, GREATERTHAN, LESSTHANOREQUALTO, GREATERTHANOREQUALTO, ISNULL,
+         AND, NAND, OR, NOR, XOR, NOT, PLUS, MINUS, ASTERISK, SLASH, MOD, POWER, INCREMENT, DECREMENT,
+         INCREMENTANDASSIGMENT, CURLYBRACKETO, CURLYBRACKETC, SQUAREBRACKETO, SQUAREBRACKETC, PARENTHESISO,
+         PARENTHESISC, EQUAL, SEMICOLON, COMMA, TRUE, FALSE, COLON, TRACK, EXTENDS, KEEP, VAR, INTEGERTYPE,
+         DOUBLETYPE, BOOLEANTYPE, STRINGTYPE, CHARACTERTYPE, ARRAY, IF, ELSE, SWITCH, CASE, BREAK, DEFAULT,
+         FOR, WHILE, DO, CONTINUE, RETURN, PLAY, WAIT, ORDER, ASCENDENT, DESCENDENT, EVEN, ODD, PRIME,
+         SUMMARIZE, LENGTH, MESSAGE, MAIN, C, C8, D, D8, E, F, F8, G, G8, A, A8;
+
+/* Non-terminals */
+non terminal s;
+             
+/* The grammar */
+start with s;
+
+s::=    s TRUE
+        | s FALSE
+        | s STRING
+        | s DOUBLE
+        | s INTEGER
+        | s CHARACTER
+        | s ISEQUAL
+        | s NOTEQUAL
+        | s LESSTHAN
+        | s GREATERTHAN
+        | s LESSTHANOREQUALTO
+        | s GREATERTHANOREQUALTO
+        | s ISNULL
+        | s AND
+        | s NAND
+        | s OR
+        | s NOR
+        | s XOR
+        | s NOT
+        | s PLUS
+        | s MINUS
+        | s ASTERISK
+        | s SLASH
+        | s MOD
+        | s POWER
+        | s INCREMENT
+        | s DECREMENT
+        | s INCREMENTANDASSIGMENT
+        | TRUE
+        | FALSE
+        | STRING
+        | DOUBLE
+        | INTEGER
+        | CHARACTER
+        | LESSTHAN
+        ;
+
