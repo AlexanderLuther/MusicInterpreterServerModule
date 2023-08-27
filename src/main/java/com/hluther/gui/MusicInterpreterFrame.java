@@ -1,6 +1,6 @@
 package com.hluther.gui;
 
-import com.hluther.controller.Analysis;
+import com.hluther.controller.AnalysisController;
 import java.io.StringReader;
 /**
  *
@@ -71,8 +71,8 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         String text = editorArea.getText();
-        Analysis analysisController = new Analysis();
-        analysisController.analyzeTrackInput(new StringReader(text));
+        AnalysisController analysisController = new AnalysisController();
+        analysisController.analyzeTrackInput(text);
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**

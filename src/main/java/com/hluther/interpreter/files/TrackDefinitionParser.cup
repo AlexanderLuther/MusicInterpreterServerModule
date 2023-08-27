@@ -1,27 +1,86 @@
 package com.hluther.interpreter.parser;
 
-import com.hluther.gui.MusicInterpreterFrame;
 import com.hluther.interpreter.lexer.TrackLexer;
+import java.util.LinkedList;
+import com.hluther.entity.MError;
 import java_cup.runtime.*;
 
 parser code {:
+
+    private LinkedList<MError> syntacticErrors = new LinkedList();
     
     public TrackParser(TrackLexer lexer) { 
         super(lexer);
     }
 
+    public LinkedList<MError> getSyntacticErrors(){
+        return syntacticErrors;
+    }
+
+    private void addSyntacticError(MError error){
+        syntacticErrors.add(error);
+    }
+
+  /*  @Override
+    protected int error_sync_size(){
+        return 1;
+    }*/
 
     public void syntax_error(java_cup.runtime.Symbol s){
-       // musicInterpreterFrame.addError(new MError(s.left, s.right, ErrorType.SEMANTIC, "No se esperaba el lexema [" +s.value+ "]"));
+        if(s.value != null){
+            addSyntacticError(new MError("Simbolo no esperado.", s.value.toString(), s.left, s.right));
+        } else{
+            String lexeme;
+            System.out.println(s);
+            switch(s.sym){
+                case 73: lexeme="+="; break;
+                case 57: lexeme=">="; break;
+                case 77: lexeme="]"; break;
+                case 56: lexeme="<"; break;
+                case 82: lexeme=","; break;
+                case 78: lexeme="("; break;
+                case 71: lexeme="++"; break;          
+                case 79: lexeme=")"; break;
+                case 64: lexeme="!"; break;
+                case 62: lexeme="!||"; break;
+                case 58: lexeme="!!"; break;
+                case 55: lexeme=">"; break;
+                case 69: lexeme="%"; break;
+                case 52: lexeme="=="; break;
+                case 54: lexeme="<"; break;
+                case 68: lexeme="/"; break;
+                case 65: lexeme="+"; break;
+                case 20: lexeme="="; break;
+                case 67: lexeme="*"; break;
+                case 70: lexeme="^"; break;
+                case 81: lexeme=";"; break;
+                case 72: lexeme="--"; break;
+                case 61: lexeme="||"; break;
+                case 74: lexeme="{"; break;
+                case 83: lexeme=":"; break;
+                case 75: lexeme="}"; break;
+                case 53: lexeme="!="; break;
+                case 59: lexeme="&&"; break;
+                case 60: lexeme="!&&"; break;
+                case 63: lexeme="&|"; break;
+                case 76: lexeme="["; break;
+                default: lexeme="Simbolo no reconocido"; break;
+            }
+            addSyntacticError(new MError("Simbolo no esperado.", lexeme, s.left, s.right));
+        }        
     }
 
     public void unrecovered_syntax_error(java_cup.runtime.Symbol s){
         //musicInterpreterFrame.addError(new MError(s.left, s.right, ErrorType.SEMANTIC, "No se esperaba el lexema [" +s.value+ "]"));
+        System.out.println("No se esperaba el lexema [" +s.sym+ "]");
     } 
 :}
 
 /* Terminals */
-terminal String STRING, ID;
+terminal String STRING, ID, BOOLEAN, TRACK, EXTENDS, KEEP, VAR, INTEGERTYPE, DOUBLETYPE, BOOLEANTYPE,
+                STRINGTYPE, CHARACTERTYPE, ARRAY, IF, ELSE, SWITCH, CASE, BREAK, DEFAULT, FOR, WHILE,
+                DO, CONTINUE, RETURN, PLAY, WAIT, ORDER, ASCENDENT, DESCENDENT, EVEN, ODD, PRIME, SUMMARIZE,
+                LENGTH, MESSAGE, MAIN, C, C8, D, D8, E, F, F8, G, G8, A, A8;
 terminal Double DOUBLE;
 terminal Integer INTEGER;
 terminal Character CHARACTER; 
@@ -29,51 +88,121 @@ terminal Character CHARACTER;
 terminal ISEQUAL, NOTEQUAL, LESSTHAN, GREATERTHAN, LESSTHANOREQUALTO, GREATERTHANOREQUALTO, ISNULL,
          AND, NAND, OR, NOR, XOR, NOT, PLUS, MINUS, ASTERISK, SLASH, MOD, POWER, INCREMENT, DECREMENT,
          INCREMENTANDASSIGMENT, CURLYBRACKETO, CURLYBRACKETC, SQUAREBRACKETO, SQUAREBRACKETC, PARENTHESISO,
-         PARENTHESISC, EQUAL, SEMICOLON, COMMA, TRUE, FALSE, COLON, TRACK, EXTENDS, KEEP, VAR, INTEGERTYPE,
-         DOUBLETYPE, BOOLEANTYPE, STRINGTYPE, CHARACTERTYPE, ARRAY, IF, ELSE, SWITCH, CASE, BREAK, DEFAULT,
-         FOR, WHILE, DO, CONTINUE, RETURN, PLAY, WAIT, ORDER, ASCENDENT, DESCENDENT, EVEN, ODD, PRIME,
-         SUMMARIZE, LENGTH, MESSAGE, MAIN, C, C8, D, D8, E, F, F8, G, G8, A, A8;
+         PARENTHESISC, EQUAL, SEMICOLON, COMMA, COLON;
 
 /* Non-terminals */
-non terminal s;
-             
+non terminal arithmetic_op, arithmetic_exp, arithmetic_value,
+             relational_op,
+             logical_op, logical_exp, logical_exp2, logical_value,
+             track, extend, extends_list, statement, statement_list, 
+             var_declaration, var_type, var_list,
+             var_declaration_assignment
+             ;   
+
+precedence left PLUS, MINUS;
+precedence left ASTERISK, SLASH, MOD;
+precedence left POWER;
+precedence left ISEQUAL, NOTEQUAL, LESSTHAN, GREATERTHAN, LESSTHANOREQUALTO, GREATERTHANOREQUALTO;
+precedence left ISNULL;
+
 /* The grammar */
-start with s;
+start with track;
 
-s::=    s TRUE
-        | s FALSE
-        | s STRING
-        | s DOUBLE
-        | s INTEGER
-        | s CHARACTER
-        | s ISEQUAL
-        | s NOTEQUAL
-        | s LESSTHAN
-        | s GREATERTHAN
-        | s LESSTHANOREQUALTO
-        | s GREATERTHANOREQUALTO
-        | s ISNULL
-        | s AND
-        | s NAND
-        | s OR
-        | s NOR
-        | s XOR
-        | s NOT
-        | s PLUS
-        | s MINUS
-        | s ASTERISK
-        | s SLASH
-        | s MOD
-        | s POWER
-        | s INCREMENT
-        | s DECREMENT
-        | s INCREMENTANDASSIGMENT
-        | TRUE
-        | FALSE
-        | STRING
-        | DOUBLE
-        | INTEGER
-        | CHARACTER
-        | LESSTHAN
-        ;
+//---------------   TRACK    ---------------// 
+track::=    TRACK ID extend CURLYBRACKETO statement CURLYBRACKETC
+            | TRACK ID extend CURLYBRACKETO CURLYBRACKETC
+            ;
 
+extend::=   EXTENDS extends_list
+            | error COMMA
+            ;
+
+extends_list::=     extends_list COMMA ID
+                    | ID
+                    ;
+
+statement::=    statement statement_list
+                | statement_list 
+                ;
+
+statement_list::=   KEEP var_declaration SEMICOLON
+                    | KEEP var_declaration_assignment SEMICOLON
+                    | var_declaration SEMICOLON
+                    | var_declaration_assignment SEMICOLON
+                    ;
+
+
+//---------------   VARIABLES DECLARATION   ---------------//
+var_declaration::=  VAR var_type var_list
+                    ;
+
+var_type::=     INTEGERTYPE
+                | DOUBLETYPE
+                | BOOLEANTYPE
+                | STRINGTYPE
+                | CHARACTERTYPE
+                ;
+
+var_list::=     var_list COMMA ID
+                | ID
+                ;
+
+
+//---------------   VARIABLES DECLARATION AND ASSIGNMENT   ---------------//
+var_declaration_assignment::=   var_declaration EQUAL logical_op
+                                ;
+
+
+//---------------   ARITHMETIC EXPRESSIONS   ---------------//     
+arithmetic_op::=    arithmetic_op PLUS arithmetic_exp
+                    | arithmetic_op MINUS arithmetic_exp
+                    | arithmetic_op ASTERISK arithmetic_exp
+                    | arithmetic_op SLASH arithmetic_exp
+                    | arithmetic_op MOD arithmetic_exp
+                    | arithmetic_op POWER arithmetic_exp
+                    | arithmetic_exp
+                    ;
+
+arithmetic_exp::=   PLUS arithmetic_value
+                    | MINUS arithmetic_value
+                    | arithmetic_value
+                    ;
+                    
+arithmetic_value::=     PARENTHESISO logical_op PARENTHESISC
+                        | DOUBLE
+                        | INTEGER
+                        | CHARACTER
+                        | BOOLEAN
+                        | ID
+                        | STRING
+                        ;
+
+//---------------   RELATIONAL EXPRESSIONS   ---------------//  
+relational_op::=    arithmetic_op ISEQUAL arithmetic_op
+                    | arithmetic_op NOTEQUAL arithmetic_op
+                    | arithmetic_op GREATERTHAN arithmetic_op
+                    | arithmetic_op LESSTHAN arithmetic_op
+                    | arithmetic_op GREATERTHANOREQUALTO arithmetic_op
+                    | arithmetic_op LESSTHANOREQUALTO arithmetic_op
+                    | ISNULL ID
+                    | arithmetic_op
+                    ;
+
+//---------------   LOGICAL EXPRESSIONS   ---------------//
+logical_op::=   logical_op OR logical_exp
+                | logical_op NOR logical_exp
+                | logical_op XOR logical_exp
+                | logical_exp
+                ;
+
+logical_exp::=  logical_exp AND logical_exp2
+                | logical_exp NAND logical_exp2
+                | logical_exp2
+                ;
+                
+logical_exp2::=     NOT logical_value
+                    | logical_value
+                    ;
+
+logical_value::=    relational_op
+                    ;

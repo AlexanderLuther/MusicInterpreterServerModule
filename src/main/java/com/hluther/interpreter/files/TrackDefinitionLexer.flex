@@ -96,14 +96,14 @@ Comment =           {EndOfLineComment} | {BlockComment}
                                                                         return createToken("DOUBLE", TrackSymbol.DOUBLE, Double.valueOf(yytext()));
                                                                     }
                                                                 }
-    "Verdadero"                                                 { return createToken("TRUE", TrackSymbol.TRUE, yytext()); }
-    "verdadero"                                                 { return createToken("TRUE", TrackSymbol.TRUE, yytext()); }
-    "Falso"                                                     { return createToken("FALSE", TrackSymbol.FALSE, yytext()); }
-    "falso"                                                     { return createToken("FALSE", TrackSymbol.FALSE, yytext()); }
-    "True"                                                      { return createToken("TRUE", TrackSymbol.TRUE, yytext()); }
-    "true"                                                      { return createToken("TRUE", TrackSymbol.TRUE, yytext()); }
-    "False"                                                     { return createToken("FALSE", TrackSymbol.FALSE, yytext()); }
-    "false"                                                     { return createToken("FALSE", TrackSymbol.FALSE, yytext()); }
+    "Verdadero"                                                 { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "verdadero"                                                 { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "Falso"                                                     { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "falso"                                                     { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "True"                                                      { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "true"                                                      { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "False"                                                     { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
+    "false"                                                     { return createToken("BOOLEAN", TrackSymbol.BOOLEAN, yytext()); }
     "'" [^(#'\n\t\r )]{1} "'"                                   { return createToken("CHARACTER", TrackSymbol.CHARACTER, (Character)yytext().charAt(1)); } 
     ("'") ("##") ("'")                                          { return createToken("CHARACTER", TrackSymbol.CHARACTER, (Character)'#'); }         
     ("'") ("#'") ("'")                                          { return createToken("CHARACTER", TrackSymbol.CHARACTER, (Character)'\''); }       
@@ -142,101 +142,101 @@ Comment =           {EndOfLineComment} | {BlockComment}
     "+="                      { return createToken("INCREMENTANDASSIGMENT", TrackSymbol.INCREMENTANDASSIGMENT); } 
 
     //PALABRAS RESERVADAS
-    "Pista"         { return createToken("TRACK", TrackSymbol.TRACK); }
-    "pista"         { return createToken("TRACK", TrackSymbol.TRACK); }
-    "Extiende"      { return createToken("EXTENDS", TrackSymbol.EXTENDS); }
-    "extiende"      { return createToken("EXTENDS", TrackSymbol.EXTENDS); }
-    "Keep"          { return createToken("KEEP", TrackSymbol.KEEP); }
-    "keep"          { return createToken("KEEP", TrackSymbol.KEEP); }
-    "Var"           { return createToken("VAR", TrackSymbol.VAR); }
-    "var"           { return createToken("VAR", TrackSymbol.VAR); }
-    "Entero"        { return createToken("INTEGERTYPE", TrackSymbol.INTEGERTYPE); }
-    "entero"        { return createToken("INTEGERTYPE", TrackSymbol.INTEGERTYPE); }
-    "Doble"         { return createToken("DOUBLETYPE", TrackSymbol.DOUBLETYPE); }
-    "doble"         { return createToken("DOUBLETYPE", TrackSymbol.DOUBLETYPE); }
-    "Boolean"       { return createToken("BOOLEANTYPE", TrackSymbol.BOOLEANTYPE); }
-    "boolean"       { return createToken("BOOLEANTYPE", TrackSymbol.BOOLEANTYPE); }
-    "Cadena"        { return createToken("STRINGTYPE", TrackSymbol.STRINGTYPE); }
-    "cadena"        { return createToken("STRINGTYPE", TrackSymbol.STRINGTYPE); }
-    "Caracter"      { return createToken("CHARACTERTYPE", TrackSymbol.CHARACTERTYPE); }
-    "caracter"      { return createToken("CHARACTERTYPE", TrackSymbol.CHARACTERTYPE); }
-    "Arreglo"       { return createToken("ARRAY", TrackSymbol.ARRAY); }
-    "arreglo"       { return createToken("ARRAY", TrackSymbol.ARRAY); }
-    "Si"            { return createToken("IF", TrackSymbol.IF); }
-    "si"            { return createToken("IF", TrackSymbol.IF); }
-    "Sino"          { return createToken("ELSE", TrackSymbol.ELSE); }
-    "sino"          { return createToken("ELSE", TrackSymbol.ELSE); }
-    "Switch"        { return createToken("SWITCH", TrackSymbol.SWITCH); }
-    "switch"        { return createToken("SWITCH", TrackSymbol.SWITCH); }
-    "Caso"          { return createToken("CASE", TrackSymbol.CASE); }
-    "caso"          { return createToken("CASE", TrackSymbol.CASE); }
-    "Salir"         { return createToken("BREAK", TrackSymbol.BREAK); }
-    "salir"         { return createToken("BREAK", TrackSymbol.BREAK); }
-    "Default"       { return createToken("DEFAULT", TrackSymbol.DEFAULT); }
-    "default"       { return createToken("DEFAULT", TrackSymbol.DEFAULT); }
-    "Para"          { return createToken("FOR", TrackSymbol.FOR); }
-    "para"          { return createToken("FOR", TrackSymbol.FOR); }
-    "Mientras"      { return createToken("WHILE", TrackSymbol.WHILE); }
-    "mientras"      { return createToken("WHILE", TrackSymbol.WHILE); }
-    "Hacer"         { return createToken("DO", TrackSymbol.DO); }
-    "hacer"         { return createToken("DO", TrackSymbol.DO); }
-    "Continuar"     { return createToken("CONTINUE", TrackSymbol.CONTINUE); }
-    "continuar"     { return createToken("CONTINUE", TrackSymbol.CONTINUE); }
-    "Retorna"       { return createToken("RETURN", TrackSymbol.RETURN); }
-    "retorna"       { return createToken("RETURN", TrackSymbol.RETURN); }
-    "Reproducir"    { return createToken("PLAY", TrackSymbol.PLAY); }
-    "reproducir"    { return createToken("PLAY", TrackSymbol.PLAY); }
-    "Esperar"       { return createToken("WAIT", TrackSymbol.WAIT); }
-    "esperar"       { return createToken("WAIT", TrackSymbol.WAIT); }
-    "Ordenar"       { return createToken("ORDER", TrackSymbol.ORDER); }
-    "ordenar"       { return createToken("ORDER", TrackSymbol.ORDER); }
-    "Ascendente"    { return createToken("ASCENDENT", TrackSymbol.ASCENDENT); }
-    "ascendente"    { return createToken("ASCENDENT", TrackSymbol.ASCENDENT); }
-    "Descendente"   { return createToken("DESCENDENT", TrackSymbol.DESCENDENT); }
-    "descendente"   { return createToken("DESCENDENT", TrackSymbol.DESCENDENT); }
-    "Pares"         { return createToken("EVEN", TrackSymbol.EVEN); }
-    "pares"         { return createToken("EVEN", TrackSymbol.EVEN); }
-    "Impares"       { return createToken("ODD", TrackSymbol.ODD); }
-    "impares"       { return createToken("ODD", TrackSymbol.ODD); }
-    "Primos"        { return createToken("PRIME", TrackSymbol.PRIME); }
-    "primos"        { return createToken("PRIME", TrackSymbol.PRIME); }
-    "Sumarizar"     { return createToken("SUMMARIZE", TrackSymbol.SUMMARIZE); }
-    "sumarizar"     { return createToken("SUMMARIZE", TrackSymbol.SUMMARIZE); }
-    "Longitud"      { return createToken("LENGTH", TrackSymbol.LENGTH); }
-    "longitud"      { return createToken("LENGTH", TrackSymbol.LENGTH); }
-    "Mensaje"       { return createToken("MESSAGE", TrackSymbol.MESSAGE); }
-    "mensaje"       { return createToken("MESSAGE", TrackSymbol.MESSAGE); }
-    "Principal"     { return createToken("MAIN", TrackSymbol.MAIN); }
-    "principal"     { return createToken("MAIN", TrackSymbol.MAIN); }
-    "Do"            { return createToken("C", TrackSymbol.C); }
-    "do"            { return createToken("C", TrackSymbol.C); }
-    "Do#"           { return createToken("C8", TrackSymbol.C8); }
-    "do#"           { return createToken("C8", TrackSymbol.C8); }
-    "Re"            { return createToken("D", TrackSymbol.D); }
-    "re"            { return createToken("D", TrackSymbol.D); }
-    "Re#"           { return createToken("D8", TrackSymbol.D8); }
-    "re#"           { return createToken("D8", TrackSymbol.D8); }
-    "Mi"            { return createToken("E", TrackSymbol.E); }
-    "mi"            { return createToken("E", TrackSymbol.E); }
-    "Fa"            { return createToken("F", TrackSymbol.F); }
-    "fa"            { return createToken("F", TrackSymbol.F); }
-    "Fa#"           { return createToken("F8", TrackSymbol.F8); }
-    "fa#"           { return createToken("F8", TrackSymbol.F8); }
-    "Sol"           { return createToken("G", TrackSymbol.G); }
-    "sol"           { return createToken("G", TrackSymbol.G); }
-    "Sol#"          { return createToken("G8", TrackSymbol.G8); }
-    "sol#"          { return createToken("G8", TrackSymbol.G8); }
-    "La"            { return createToken("A", TrackSymbol.A); }
-    "la"            { return createToken("A", TrackSymbol.A); }
-    "La#"           { return createToken("A8", TrackSymbol.A8); }
-    "la#"           { return createToken("A8", TrackSymbol.A8); }
+    "Pista"         { return createToken("TRACK", TrackSymbol.TRACK, yytext()); }
+    "pista"         { return createToken("TRACK", TrackSymbol.TRACK, yytext()); }
+    "Extiende"      { return createToken("EXTENDS", TrackSymbol.EXTENDS, yytext()); }
+    "extiende"      { return createToken("EXTENDS", TrackSymbol.EXTENDS, yytext()); }
+    "Keep"          { return createToken("KEEP", TrackSymbol.KEEP, yytext()); }
+    "keep"          { return createToken("KEEP", TrackSymbol.KEEP, yytext()); }
+    "Var"           { return createToken("VAR", TrackSymbol.VAR, yytext()); }
+    "var"           { return createToken("VAR", TrackSymbol.VAR, yytext()); }
+    "Entero"        { return createToken("INTEGERTYPE", TrackSymbol.INTEGERTYPE, yytext()); }
+    "entero"        { return createToken("INTEGERTYPE", TrackSymbol.INTEGERTYPE, yytext()); }
+    "Doble"         { return createToken("DOUBLETYPE", TrackSymbol.DOUBLETYPE, yytext()); }
+    "doble"         { return createToken("DOUBLETYPE", TrackSymbol.DOUBLETYPE, yytext()); }
+    "Boolean"       { return createToken("BOOLEANTYPE", TrackSymbol.BOOLEANTYPE, yytext()); }
+    "boolean"       { return createToken("BOOLEANTYPE", TrackSymbol.BOOLEANTYPE, yytext()); }
+    "Cadena"        { return createToken("STRINGTYPE", TrackSymbol.STRINGTYPE, yytext()); }
+    "cadena"        { return createToken("STRINGTYPE", TrackSymbol.STRINGTYPE, yytext()); }
+    "Caracter"      { return createToken("CHARACTERTYPE", TrackSymbol.CHARACTERTYPE, yytext()); }
+    "caracter"      { return createToken("CHARACTERTYPE", TrackSymbol.CHARACTERTYPE, yytext()); }
+    "Arreglo"       { return createToken("ARRAY", TrackSymbol.ARRAY, yytext()); }
+    "arreglo"       { return createToken("ARRAY", TrackSymbol.ARRAY, yytext()); }
+    "Si"            { return createToken("IF", TrackSymbol.IF, yytext()); }
+    "si"            { return createToken("IF", TrackSymbol.IF, yytext()); }
+    "Sino"          { return createToken("ELSE", TrackSymbol.ELSE, yytext()); }
+    "sino"          { return createToken("ELSE", TrackSymbol.ELSE, yytext()); }
+    "Switch"        { return createToken("SWITCH", TrackSymbol.SWITCH, yytext()); }
+    "switch"        { return createToken("SWITCH", TrackSymbol.SWITCH, yytext()); }
+    "Caso"          { return createToken("CASE", TrackSymbol.CASE, yytext()); }
+    "caso"          { return createToken("CASE", TrackSymbol.CASE, yytext()); }
+    "Salir"         { return createToken("BREAK", TrackSymbol.BREAK, yytext()); }
+    "salir"         { return createToken("BREAK", TrackSymbol.BREAK, yytext()); }
+    "Default"       { return createToken("DEFAULT", TrackSymbol.DEFAULT, yytext()); }
+    "default"       { return createToken("DEFAULT", TrackSymbol.DEFAULT, yytext()); }
+    "Para"          { return createToken("FOR", TrackSymbol.FOR, yytext()); }
+    "para"          { return createToken("FOR", TrackSymbol.FOR, yytext()); }
+    "Mientras"      { return createToken("WHILE", TrackSymbol.WHILE, yytext()); }
+    "mientras"      { return createToken("WHILE", TrackSymbol.WHILE, yytext()); }
+    "Hacer"         { return createToken("DO", TrackSymbol.DO, yytext()); }
+    "hacer"         { return createToken("DO", TrackSymbol.DO, yytext()); }
+    "Continuar"     { return createToken("CONTINUE", TrackSymbol.CONTINUE, yytext()); }
+    "continuar"     { return createToken("CONTINUE", TrackSymbol.CONTINUE, yytext()); }
+    "Retorna"       { return createToken("RETURN", TrackSymbol.RETURN, yytext()); }
+    "retorna"       { return createToken("RETURN", TrackSymbol.RETURN, yytext()); }
+    "Reproducir"    { return createToken("PLAY", TrackSymbol.PLAY, yytext()); }
+    "reproducir"    { return createToken("PLAY", TrackSymbol.PLAY, yytext()); }
+    "Esperar"       { return createToken("WAIT", TrackSymbol.WAIT, yytext()); }
+    "esperar"       { return createToken("WAIT", TrackSymbol.WAIT, yytext()); }
+    "Ordenar"       { return createToken("ORDER", TrackSymbol.ORDER, yytext()); }
+    "ordenar"       { return createToken("ORDER", TrackSymbol.ORDER, yytext()); }
+    "Ascendente"    { return createToken("ASCENDENT", TrackSymbol.ASCENDENT, yytext()); }
+    "ascendente"    { return createToken("ASCENDENT", TrackSymbol.ASCENDENT, yytext()); }
+    "Descendente"   { return createToken("DESCENDENT", TrackSymbol.DESCENDENT, yytext()); }
+    "descendente"   { return createToken("DESCENDENT", TrackSymbol.DESCENDENT, yytext()); }
+    "Pares"         { return createToken("EVEN", TrackSymbol.EVEN, yytext()); }
+    "pares"         { return createToken("EVEN", TrackSymbol.EVEN, yytext()); }
+    "Impares"       { return createToken("ODD", TrackSymbol.ODD, yytext()); }
+    "impares"       { return createToken("ODD", TrackSymbol.ODD, yytext()); }
+    "Primos"        { return createToken("PRIME", TrackSymbol.PRIME, yytext()); }
+    "primos"        { return createToken("PRIME", TrackSymbol.PRIME, yytext()); }
+    "Sumarizar"     { return createToken("SUMMARIZE", TrackSymbol.SUMMARIZE, yytext()); }
+    "sumarizar"     { return createToken("SUMMARIZE", TrackSymbol.SUMMARIZE, yytext()); }
+    "Longitud"      { return createToken("LENGTH", TrackSymbol.LENGTH, yytext()); }
+    "longitud"      { return createToken("LENGTH", TrackSymbol.LENGTH, yytext()); }
+    "Mensaje"       { return createToken("MESSAGE", TrackSymbol.MESSAGE, yytext()); }
+    "mensaje"       { return createToken("MESSAGE", TrackSymbol.MESSAGE, yytext()); }
+    "Principal"     { return createToken("MAIN", TrackSymbol.MAIN, yytext()); }
+    "principal"     { return createToken("MAIN", TrackSymbol.MAIN, yytext()); }
+    "Do"            { return createToken("C", TrackSymbol.C, yytext()); }
+    "do"            { return createToken("C", TrackSymbol.C, yytext()); }
+    "Do#"           { return createToken("C8", TrackSymbol.C8, yytext()); }
+    "do#"           { return createToken("C8", TrackSymbol.C8, yytext()); }
+    "Re"            { return createToken("D", TrackSymbol.D, yytext()); }
+    "re"            { return createToken("D", TrackSymbol.D, yytext()); }
+    "Re#"           { return createToken("D8", TrackSymbol.D8, yytext()); }
+    "re#"           { return createToken("D8", TrackSymbol.D8, yytext()); }
+    "Mi"            { return createToken("E", TrackSymbol.E, yytext()); }
+    "mi"            { return createToken("E", TrackSymbol.E, yytext()); }
+    "Fa"            { return createToken("F", TrackSymbol.F, yytext()); }
+    "fa"            { return createToken("F", TrackSymbol.F, yytext()); }
+    "Fa#"           { return createToken("F8", TrackSymbol.F8, yytext()); }
+    "fa#"           { return createToken("F8", TrackSymbol.F8, yytext()); }
+    "Sol"           { return createToken("G", TrackSymbol.G, yytext()); }
+    "sol"           { return createToken("G", TrackSymbol.G, yytext()); }
+    "Sol#"          { return createToken("G8", TrackSymbol.G8, yytext()); }
+    "sol#"          { return createToken("G8", TrackSymbol.G8, yytext()); }
+    "La"            { return createToken("A", TrackSymbol.A, yytext()); }
+    "la"            { return createToken("A", TrackSymbol.A, yytext()); }
+    "La#"           { return createToken("A8", TrackSymbol.A8, yytext()); }
+    "la#"           { return createToken("A8", TrackSymbol.A8, yytext()); }
 
     //COMENTARIOS
     {Comment}       { verifyLexicalError(); }
 
     //OTROS
     "{"                                             { return createToken("CURLYBRACKETO", TrackSymbol.CURLYBRACKETO); }
-    "}"                                             { return createToken("CURLYBRACKETC", TrackSymbol.CURLYBRACKETO); }
+    "}"                                             { return createToken("CURLYBRACKETC", TrackSymbol.CURLYBRACKETC); }
     "["                                             { return createToken("SQUAREBRACKETO", TrackSymbol.SQUAREBRACKETO); }
     "]"                                             { return createToken("SQUAREBRACKETC", TrackSymbol.SQUAREBRACKETC); }
     "("                                             { return createToken("PARENTHESISO", TrackSymbol.PARENTHESISO); }
@@ -245,7 +245,7 @@ Comment =           {EndOfLineComment} | {BlockComment}
     ";"                                             { return createToken("SEMICOLON", TrackSymbol.SEMICOLON); }
     ","                                             { return createToken("COMMA", TrackSymbol.COMMA); }
     ":"                                             { return createToken("COLON", TrackSymbol.COLON); }
-    ([:letter:]|"_")([:letter:]|[:number:]|"_")*    { return createToken("ID", TrackSymbol.ID, yytext()); } 
+    ([:letter:]|"_")([:letter:]|[:digit:]|"_")*     { return createToken("ID", TrackSymbol.ID, yytext()); } 
     {WhiteSpace}                                    { verifyLexicalError(); }
     [^]                                             { errorLexeme.append(yytext()); errorLine = yyline+1; errorColumn = yycolumn+1; }
     <<EOF>>                                         { verifyLexicalError(); return new Symbol(TrackSymbol.EOF); }

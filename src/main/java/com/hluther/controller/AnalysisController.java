@@ -5,30 +5,35 @@ import com.hluther.entity.MError;
 import com.hluther.interpreter.lexer.TrackLexer;
 import com.hluther.interpreter.parser.TrackParser;
 import java.io.StringReader;
-import java.util.Arrays;
 /**
  *
  * @author helmuth
  */
-public class Analysis {
+public class AnalysisController {
     
     private AnalysisError analysisError;
 
-    public Analysis() {
+    public AnalysisController() {
         this.analysisError = new AnalysisError();
     }
     
-    public void analyzeTrackInput(StringReader inputData){
+    public void analyzeTrackInput(String inputData){
         try {
-            TrackLexer lexer = new TrackLexer(inputData);
+            TrackLexer lexer = new TrackLexer(new StringReader(inputData));
             TrackParser parser = new TrackParser(lexer);
             parser.parse();
             
             analysisError.addLexicalErrors(lexer.getLexicalErrors());
             analysisError.addSemanticErrors(lexer.getSemanticErrors());
+            analysisError.addSintacticErrors(parser.getSyntacticErrors());
             
             System.out.println("ERRORES LEXICOS");
              for(Object error : analysisError.getLexicalErrors()){
+                System.out.println("Columna:"+((MError)error).getColumn() +" Linea:"+((MError)error).getLine()+" "+((MError)error).getError() + " " + ((MError)error).getLexeme());
+            }
+             
+            System.out.println("ERRORES SINCTACTICOS");
+             for(Object error : analysisError.getSintacticErrors()){
                 System.out.println("Columna:"+((MError)error).getColumn() +" Linea:"+((MError)error).getLine()+" "+((MError)error).getError() + " " + ((MError)error).getLexeme());
             }
           
@@ -38,7 +43,7 @@ public class Analysis {
             }
             
         } catch (Exception ex) {
-            System.out.println("Error ejecutando el analisis.");
+            System.out.println("Error ejecutando el analisis." + ex.getMessage());
         }
     }
 

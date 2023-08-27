@@ -8,133 +8,96 @@ package com.hluther.interpreter.parser;
 /** CUP generated class containing symbol constants. */
 public class TrackSymbol {
   /* terminals */
-  public static final int TRACK = 41;
-  public static final int INCREMENTANDASSIGMENT = 28;
-  public static final int GREATERTHANOREQUALTO = 12;
-  public static final int LESSTHANOREQUALTO = 11;
-  public static final int SQUAREBRACKETC = 32;
-  public static final int CHARACTERTYPE = 49;
-  public static final int ODD = 68;
-  public static final int A8 = 84;
-  public static final int KEEP = 43;
-  public static final int G8 = 82;
-  public static final int COMMA = 37;
-  public static final int PARENTHESISO = 33;
-  public static final int INCREMENT = 26;
-  public static final int INTEGER = 5;
-  public static final int DOUBLE = 4;
-  public static final int PARENTHESISC = 34;
-  public static final int FALSE = 39;
-  public static final int NOT = 19;
-  public static final int NOR = 17;
-  public static final int ARRAY = 50;
-  public static final int VAR = 44;
-  public static final int F8 = 80;
-  public static final int INTEGERTYPE = 45;
-  public static final int ISNULL = 13;
-  public static final int STRINGTYPE = 48;
-  public static final int GREATERTHAN = 10;
-  public static final int CHARACTER = 6;
-  public static final int MOD = 24;
-  public static final int ISEQUAL = 7;
-  public static final int LESSTHAN = 9;
-  public static final int SUMMARIZE = 70;
-  public static final int SLASH = 23;
-  public static final int TRUE = 38;
-  public static final int PLUS = 20;
-  public static final int ORDER = 64;
-  public static final int WHILE = 58;
-  public static final int BOOLEANTYPE = 47;
-  public static final int EQUAL = 35;
-  public static final int EVEN = 67;
-  public static final int EXTENDS = 42;
-  public static final int SWITCH = 53;
-  public static final int DO = 59;
-  public static final int FOR = 57;
-  public static final int RETURN = 61;
-  public static final int ELSE = 52;
-  public static final int ASTERISK = 22;
-  public static final int BREAK = 55;
-  public static final int LENGTH = 71;
-  public static final int G = 81;
-  public static final int POWER = 25;
-  public static final int F = 79;
-  public static final int E = 78;
-  public static final int D = 76;
+  public static final int TRACK = 5;
+  public static final int INCREMENTANDASSIGMENT = 73;
+  public static final int GREATERTHANOREQUALTO = 57;
+  public static final int SQUAREBRACKETC = 77;
+  public static final int LESSTHANOREQUALTO = 56;
+  public static final int CHARACTERTYPE = 13;
+  public static final int ODD = 32;
+  public static final int A8 = 48;
+  public static final int KEEP = 7;
+  public static final int COMMA = 82;
+  public static final int G8 = 46;
+  public static final int PARENTHESISO = 78;
+  public static final int INCREMENT = 71;
+  public static final int INTEGER = 50;
+  public static final int DOUBLE = 49;
+  public static final int PARENTHESISC = 79;
+  public static final int NOT = 64;
+  public static final int NOR = 62;
+  public static final int ARRAY = 14;
+  public static final int VAR = 8;
+  public static final int INTEGERTYPE = 9;
+  public static final int F8 = 44;
+  public static final int ISNULL = 58;
+  public static final int STRINGTYPE = 12;
+  public static final int GREATERTHAN = 55;
+  public static final int CHARACTER = 51;
+  public static final int MOD = 69;
+  public static final int ISEQUAL = 52;
+  public static final int LESSTHAN = 54;
+  public static final int SUMMARIZE = 34;
+  public static final int SLASH = 68;
+  public static final int PLUS = 65;
+  public static final int ORDER = 28;
+  public static final int EQUAL = 80;
+  public static final int WHILE = 22;
+  public static final int BOOLEANTYPE = 11;
+  public static final int EVEN = 31;
+  public static final int EXTENDS = 6;
+  public static final int BOOLEAN = 4;
+  public static final int SWITCH = 17;
+  public static final int DO = 23;
+  public static final int FOR = 21;
+  public static final int RETURN = 25;
+  public static final int ELSE = 16;
+  public static final int ASTERISK = 67;
+  public static final int BREAK = 19;
+  public static final int LENGTH = 35;
+  public static final int G = 45;
+  public static final int POWER = 70;
+  public static final int F = 43;
+  public static final int E = 42;
+  public static final int SEMICOLON = 81;
   public static final int EOF = 0;
-  public static final int SEMICOLON = 36;
-  public static final int C = 74;
-  public static final int A = 83;
-  public static final int DEFAULT = 56;
-  public static final int D8 = 77;
-  public static final int MESSAGE = 72;
-  public static final int DECREMENT = 27;
-  public static final int PLAY = 62;
-  public static final int DESCENDENT = 66;
-  public static final int MAIN = 73;
-  public static final int MINUS = 21;
-  public static final int OR = 16;
+  public static final int D = 40;
+  public static final int C = 38;
+  public static final int DEFAULT = 20;
+  public static final int A = 47;
+  public static final int D8 = 41;
+  public static final int DECREMENT = 72;
+  public static final int MESSAGE = 36;
+  public static final int PLAY = 26;
+  public static final int DESCENDENT = 30;
+  public static final int MAIN = 37;
+  public static final int MINUS = 66;
+  public static final int OR = 61;
   public static final int error = 1;
-  public static final int CONTINUE = 60;
-  public static final int IF = 51;
+  public static final int CONTINUE = 24;
+  public static final int IF = 15;
   public static final int ID = 3;
-  public static final int CURLYBRACKETO = 29;
-  public static final int DOUBLETYPE = 46;
-  public static final int ASCENDENT = 65;
-  public static final int COLON = 40;
-  public static final int C8 = 75;
-  public static final int CURLYBRACKETC = 30;
-  public static final int NOTEQUAL = 8;
-  public static final int CASE = 54;
+  public static final int CURLYBRACKETO = 74;
+  public static final int DOUBLETYPE = 10;
+  public static final int ASCENDENT = 29;
+  public static final int COLON = 83;
+  public static final int C8 = 39;
+  public static final int CURLYBRACKETC = 75;
+  public static final int NOTEQUAL = 53;
+  public static final int CASE = 18;
   public static final int STRING = 2;
-  public static final int PRIME = 69;
-  public static final int AND = 14;
-  public static final int WAIT = 63;
-  public static final int NAND = 15;
-  public static final int XOR = 18;
-  public static final int SQUAREBRACKETO = 31;
+  public static final int PRIME = 33;
+  public static final int AND = 59;
+  public static final int WAIT = 27;
+  public static final int NAND = 60;
+  public static final int XOR = 63;
+  public static final int SQUAREBRACKETO = 76;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
   "STRING",
   "ID",
-  "DOUBLE",
-  "INTEGER",
-  "CHARACTER",
-  "ISEQUAL",
-  "NOTEQUAL",
-  "LESSTHAN",
-  "GREATERTHAN",
-  "LESSTHANOREQUALTO",
-  "GREATERTHANOREQUALTO",
-  "ISNULL",
-  "AND",
-  "NAND",
-  "OR",
-  "NOR",
-  "XOR",
-  "NOT",
-  "PLUS",
-  "MINUS",
-  "ASTERISK",
-  "SLASH",
-  "MOD",
-  "POWER",
-  "INCREMENT",
-  "DECREMENT",
-  "INCREMENTANDASSIGMENT",
-  "CURLYBRACKETO",
-  "CURLYBRACKETC",
-  "SQUAREBRACKETO",
-  "SQUAREBRACKETC",
-  "PARENTHESISO",
-  "PARENTHESISC",
-  "EQUAL",
-  "SEMICOLON",
-  "COMMA",
-  "TRUE",
-  "FALSE",
-  "COLON",
+  "BOOLEAN",
   "TRACK",
   "EXTENDS",
   "KEEP",
@@ -178,7 +141,42 @@ public class TrackSymbol {
   "G",
   "G8",
   "A",
-  "A8"
+  "A8",
+  "DOUBLE",
+  "INTEGER",
+  "CHARACTER",
+  "ISEQUAL",
+  "NOTEQUAL",
+  "LESSTHAN",
+  "GREATERTHAN",
+  "LESSTHANOREQUALTO",
+  "GREATERTHANOREQUALTO",
+  "ISNULL",
+  "AND",
+  "NAND",
+  "OR",
+  "NOR",
+  "XOR",
+  "NOT",
+  "PLUS",
+  "MINUS",
+  "ASTERISK",
+  "SLASH",
+  "MOD",
+  "POWER",
+  "INCREMENT",
+  "DECREMENT",
+  "INCREMENTANDASSIGMENT",
+  "CURLYBRACKETO",
+  "CURLYBRACKETC",
+  "SQUAREBRACKETO",
+  "SQUAREBRACKETC",
+  "PARENTHESISO",
+  "PARENTHESISC",
+  "EQUAL",
+  "SEMICOLON",
+  "COMMA",
+  "COLON"
   };
 }
 

@@ -1,2 +1,8 @@
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/entity/AnalysisError.java
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/gui/MusicInterpreterFrame.java
 /home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/musicinterpreter/servermodule/MusicInterpreterServerModule.java
-/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/gui/MusicInterpreter.java
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/controller/AnalysisController.java
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/interpreter/lexer/TrackLexer.java
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/interpreter/parser/TrackSymbol.java
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/interpreter/parser/TrackParser.java
+/home/helmuth/Documentos/Programas-Desarrollados/Compiladores/Proyecto 1/MusicInterpreter-ServerModule/src/main/java/com/hluther/entity/MError.java
