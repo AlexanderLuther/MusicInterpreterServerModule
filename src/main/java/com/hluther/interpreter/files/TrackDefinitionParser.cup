@@ -21,10 +21,10 @@ parser code {:
         syntacticErrors.add(error);
     }
 
-  /*  @Override
+    @Override
     protected int error_sync_size(){
         return 1;
-    }*/
+    }
 
     public void syntax_error(java_cup.runtime.Symbol s){
         if(s.value != null){
@@ -94,9 +94,11 @@ terminal ISEQUAL, NOTEQUAL, LESSTHAN, GREATERTHAN, LESSTHANOREQUALTO, GREATERTHA
 non terminal arithmetic_op, arithmetic_exp, arithmetic_value,
              relational_op,
              logical_op, logical_exp, logical_exp2, logical_value,
-             track, extend, extends_list, statement, statement_list, 
+             track, extend, extends_list, statement, statement_list,
              var_declaration, var_type, var_list,
-             var_declaration_assignment
+             var_declaration_assignment,
+             s,
+             var_assignment
              ;   
 
 precedence left PLUS, MINUS;
@@ -106,30 +108,35 @@ precedence left ISEQUAL, NOTEQUAL, LESSTHAN, GREATERTHAN, LESSTHANOREQUALTO, GRE
 precedence left ISNULL;
 
 /* The grammar */
-start with track;
+start with s;
+
+s::=    track
+        ;
 
 //---------------   TRACK    ---------------// 
-track::=    TRACK ID extend CURLYBRACKETO statement CURLYBRACKETC
-            | TRACK ID extend CURLYBRACKETO CURLYBRACKETC
+track::=    TRACK ID:val extend CURLYBRACKETO statement CURLYBRACKETC {: System.out.println(val); :}  
+            | TRACK ID CURLYBRACKETO statement CURLYBRACKETC
+            | error s
+            | error CURLYBRACKETO
             ;
 
 extend::=   EXTENDS extends_list
-            | error COMMA
+            | error
             ;
 
 extends_list::=     extends_list COMMA ID
                     | ID
+                    | error ID
                     ;
 
-statement::=    statement statement_list
-                | statement_list 
+statement::=    statement KEEP var_declaration SEMICOLON
+                | statement KEEP var_declaration_assignment SEMICOLON
+                | statement var_declaration SEMICOLON
+                | statement var_declaration_assignment SEMICOLON
+                | statement var_assignment SEMICOLON
+                | error SEMICOLON
+                |
                 ;
-
-statement_list::=   KEEP var_declaration SEMICOLON
-                    | KEEP var_declaration_assignment SEMICOLON
-                    | var_declaration SEMICOLON
-                    | var_declaration_assignment SEMICOLON
-                    ;
 
 
 //---------------   VARIABLES DECLARATION   ---------------//
@@ -143,14 +150,23 @@ var_type::=     INTEGERTYPE
                 | CHARACTERTYPE
                 ;
 
-var_list::=     var_list COMMA ID
-                | ID
+var_list::=     var_list COMMA ID:val    {: System.out.println(val); :}  
+                | ID:val {: System.out.println(val); :}  
+                | error
                 ;
 
 
 //---------------   VARIABLES DECLARATION AND ASSIGNMENT   ---------------//
 var_declaration_assignment::=   var_declaration EQUAL logical_op
                                 ;
+
+//---------------   VARIABLES ASSIGNMENT   ---------------//
+var_assignment::=   ID EQUAL logical_op
+                    | ID INCREMENTANDASSIGMENT logical_op
+                    | ID INCREMENT
+                    | ID DECREMENT
+                    ;
+
 
 
 //---------------   ARITHMETIC EXPRESSIONS   ---------------//     
