@@ -1252,7 +1252,7 @@ public class TrackLexer implements java_cup.runtime.Scanner {
             // fall through
           case 99: break;
           case 4:
-            { string.setLength(0); yybegin(STRING);
+            { string.setLength(0); string.append("\""); yybegin(STRING);
             }
             // fall through
           case 100: break;
@@ -1372,7 +1372,7 @@ public class TrackLexer implements java_cup.runtime.Scanner {
             // fall through
           case 122: break;
           case 27:
-            { yybegin(YYINITIAL); return createToken("STRING", TrackSymbol.STRING, string.toString());
+            { yybegin(YYINITIAL); string.append("\""); return createToken("STRING", TrackSymbol.STRING, string.toString());
             }
             // fall through
           case 123: break;

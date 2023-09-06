@@ -4,6 +4,7 @@ com/hluther/interpreter/lexer/TrackLexer.class
 com/hluther/interpreter/parser/TrackParser.class
 com/hluther/gui/MusicInterpreterFrame$2.class
 com/hluther/musicinterpreter/servermodule/MusicInterpreterServerModule.class
+com/hluther/controller/FileController.class
 com/hluther/entity/AnalysisError.class
 com/hluther/controller/AnalysisController.class
 com/hluther/interpreter/parser/TrackParser$CUP$TrackParser$actions.class

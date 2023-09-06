@@ -109,7 +109,7 @@ Comment =           {EndOfLineComment} | {BlockComment}
     ("'") ("#'") ("'")                                          { return createToken("CHARACTER", TrackSymbol.CHARACTER, (Character)'\''); }       
     ("'") ("#t") ("'")                                          { return createToken("CHARACTER", TrackSymbol.CHARACTER, (Character)'\t'); }        
     ("'") ("#n") ("'")                                          { return createToken("CHARACTER", TrackSymbol.CHARACTER, (Character)'\n'); }   
-    \"                                                          { string.setLength(0); yybegin(STRING); }
+    \"                                                          { string.setLength(0); string.append("\""); yybegin(STRING); }
 
     //OPERADORES RELACIONALES
     "=="                        { return createToken("ISEQUAL", TrackSymbol.ISEQUAL); }                      
@@ -253,7 +253,7 @@ Comment =           {EndOfLineComment} | {BlockComment}
 }
 
 <STRING> {
-    \"              { yybegin(YYINITIAL); return createToken("STRING", TrackSymbol.STRING, string.toString()); }
+    \"              { yybegin(YYINITIAL); string.append("\""); return createToken("STRING", TrackSymbol.STRING, string.toString()); }
     [^\n\r#\"]+     { string.append( yytext() ); }
     #t              { string.append('\t'); }
     #n              { string.append('\n'); }

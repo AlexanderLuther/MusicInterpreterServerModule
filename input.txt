@@ -1,0 +1,12 @@
+Pista  Coro extiende Ritmo, FramgentoCoro{
+
+	Principal(){
+		var entero  var1 = 1+ 1 ;
+		reproducir();
+
+
+
+	}
+
+
+}
