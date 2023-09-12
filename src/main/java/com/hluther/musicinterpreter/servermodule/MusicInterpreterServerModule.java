@@ -15,12 +15,9 @@ import com.hluther.gui.MusicInterpreterFrame;
 public class MusicInterpreterServerModule {
 
     public static void main(String[] args) {
-       // MusicInterpreterFrame intepreterFrame = new MusicInterpreterFrame();
-        //intepreterFrame.setVisible(true);
-        FileController fileController = new FileController();
-        AnalysisController analysisController = new AnalysisController();
-        
-        analysisController.analyzeTrackInput(fileController.readFile("input.txt"));
+       MusicInterpreterFrame intepreterFrame = new MusicInterpreterFrame();
+        intepreterFrame.setVisible(true);
+
 
         }
                 

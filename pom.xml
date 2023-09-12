@@ -16,7 +16,12 @@
 		<id>jitpack.io</id>
 		<url>https://jitpack.io</url>
 	</repository>
-    </repositories>
+            <repository>
+                  <id>unknown-jars-temp-repo</id>
+                  <name>A temporary repository created by NetBeans for libraries and jars it could not identify. Please replace the dependencies in this repository with correct ones and delete this repository.</name>
+                  <url>file:${project.basedir}/lib</url>
+            </repository>
+      </repositories>
     <dependencies>
         <dependency>
             <groupId>com.github.vbmacher</groupId>
@@ -27,6 +32,16 @@
             <groupId>com.github.JensPiegsa</groupId>
             <artifactId>jfugue</artifactId>
             <version>5.0.9</version>
+        </dependency>
+         <dependency>
+            <groupId>com.fifesoft</groupId>
+            <artifactId>rsyntaxtextarea</artifactId>
+            <version>3.3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fifesoft</groupId>
+            <artifactId>autocomplete</artifactId>
+            <version>3.3.1</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 jflex TrackDefinitionLexer.flex
 cup -parser TrackParser -symbols TrackSymbol TrackDefinitionParser.cup
 
