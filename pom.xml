@@ -11,11 +11,22 @@
         <maven.compiler.target>17</maven.compiler.target>
         <exec.mainClass>com.hluther.musicinterpreter.servermodule.MusicInterpreterServerModule</exec.mainClass>
     </properties>
+      <repositories>
+	<repository>
+		<id>jitpack.io</id>
+		<url>https://jitpack.io</url>
+	</repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>com.github.vbmacher</groupId>
             <artifactId>java-cup-runtime</artifactId>
             <version>11b-20160615-2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.JensPiegsa</groupId>
+            <artifactId>jfugue</artifactId>
+            <version>5.0.9</version>
         </dependency>
     </dependencies>
 </project>

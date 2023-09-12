@@ -42,4 +42,8 @@ public class AnalysisError {
         this.semanticErrors.addAll(semanticErrors);
     }
     
+    public void addSemanticError(MError semanticError){
+        this.semanticErrors.add(semanticError);
+    }
+    
 }

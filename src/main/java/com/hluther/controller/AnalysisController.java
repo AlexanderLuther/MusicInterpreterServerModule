@@ -4,7 +4,12 @@ import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
 import com.hluther.interpreter.lexer.TrackLexer;
 import com.hluther.interpreter.parser.TrackParser;
+import com.hluther.interpreter.ast.track.Track;
+import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
+import com.hluther.interpreter.ast.table.typeTable.SymbolType;
+import com.hluther.interpreter.ast.table.typeTable.TypeTable;
 import java.io.StringReader;
+import java.util.Stack;
 /**
  *
  * @author helmuth
@@ -27,6 +32,12 @@ public class AnalysisController {
             analysisError.addSemanticErrors(lexer.getSemanticErrors());
             analysisError.addSintacticErrors(parser.getSyntacticErrors());
             
+            
+            
+            Track track = parser.getTrack();
+            
+            track.analyze(new TypeTable(), new SymbolTable(), new Stack<>(),  analysisError);
+            
             System.out.println("ERRORES LEXICOS");
              for(Object error : analysisError.getLexicalErrors()){
                 System.out.println("Columna:"+((MError)error).getColumn() +" Linea:"+((MError)error).getLine()+" "+((MError)error).getError() + " " + ((MError)error).getLexeme());
@@ -39,9 +50,9 @@ public class AnalysisController {
           
             System.out.println("ERRORES SEMANTICOS");
             for(Object error : analysisError.getSemanticErrors()){
-                System.out.println(((MError)error).getColumn() +" "+((MError)error).getLine()+" "+((MError)error).getError());
+                System.out.println(((MError)error).getColumn() +" "+((MError)error).getLine()+" "+((MError)error).getError() +" "+ ((MError)error).getLexeme());
             }
-            
+           
         } catch (Exception ex) {
             System.out.println("Error ejecutando el analisis." + ex.getMessage());
         }

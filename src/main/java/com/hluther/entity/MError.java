@@ -49,5 +49,4 @@ public class MError {
         this.column = column;
     }
     
-    
 }

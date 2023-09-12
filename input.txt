@@ -1,12 +1,101 @@
 Pista  Coro extiende Ritmo, FramgentoCoro{
 
-	Principal(){
-		var entero  var1 = 1+ 1 ;
-		reproducir();
+var cadena varCadena, varCadena2;
+var entero varEntero = 10.1;
+var boolean varBoolean = true;
+var doble varDoble = 10;
+var caracter varCaracter = 'a';
+var doble arreglo arregloDoble[][][][] = {{1, 2.0}, {10.1, 5}, {1, 3}, {1,2}};
+var entero arreglo arregloEntero[1][3];
 
 
+
+procedimiento1(){
+	var doble prueba =  arregloEntero[1][1];
+}
+
+boolean funcionEntera(entero param1, entero param2){
+	retorna true;
+}
+
+
+var boolean pruebaBooleana = "Ad" == "asD" || true;
+var boolean pruebaEntera = false;
+
+
+
+
+entero funcionEntera(){
+	varCadena2 = "";
+    var cadena varCadena = varCadena2;
+    varEntero = arregloEntero[1][2];
+
+    arregloEntero[1][2] = arregloEntero[0][0];
+    retorna 1;
+}
+
+
+
+
+
+caracter procedimiento(entero param1){
+	var entero num = param1;
+	retorna 34;
+}
+
+
+
+
+procedimientoConParametros(doble param1, doble param2){
+
+}
+
+
+	var entero mivar;
+Principal(){
+var boolean arreglo arregloBoolean[1];
+
+    funcionEntera(12, varEntero);
+    Reproducir(Do,  varEntero, 1, 1);
+
+    var caracter mivar = 9;
+    Longitud("asd");
+
+	mivar+=true;
+
+	mientras(1 == 1){
+		var entero mivar;
 
 	}
 
+	si(true){
+		var entero mivar;
+	} sino si(true){
+		var entero mivar;
+	}
+	sino{
+		var entero mivar;
+	}
+
+	para(var entero x= 1; x<10; x++){
+			salir;
+			continuar;
+	}
+
+	switch(mivar){
+	caso 'a':
+		var entero a;
+		salir;
+
+	caso 'b':
+		var entero a;
+		salir;
+	caso 'a':
+
+	}
+
+
+
+}
 
 }

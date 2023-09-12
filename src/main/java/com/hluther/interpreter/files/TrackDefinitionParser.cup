@@ -5,11 +5,18 @@ import java.util.LinkedList;
 import com.hluther.entity.MError;
 import java_cup.runtime.*;
 import com.hluther.interpreter.ast.*;
-import com.hluther.interpreter.ast.table.SymbolType;
+import com.hluther.interpreter.ast.method.*;
+import com.hluther.interpreter.ast.instruction.*;
+import com.hluther.interpreter.ast.track.*;
+import com.hluther.interpreter.ast.table.typeTable.SymbolType;
+import com.hluther.interpreter.ast.operation.*;
+import com.hluther.interpreter.ast.controlInstruction.*;
+
 
 parser code {:
 
     private LinkedList<MError> syntacticErrors = new LinkedList();
+    private Track track;
     
     public TrackParser(TrackLexer lexer) { 
         super(lexer);
@@ -17,6 +24,10 @@ parser code {:
 
     public LinkedList<MError> getSyntacticErrors(){
         return syntacticErrors;
+    }
+
+    public Track getTrack(){
+        return track;
     }
 
     private void addSyntacticError(MError error){
@@ -77,40 +88,40 @@ terminal String STRING, ID, BOOLEAN, TRACK, EXTENDS, KEEP, VAR, INTEGERTYPE, DOU
                 STRINGTYPE, CHARACTERTYPE, ARRAY, IF, ELSE, SWITCH, CASE, BREAK, DEFAULT, FOR, WHILE,
                 DO, CONTINUE, RETURN, PLAY, WAIT, ORDER, ASCENDENT, DESCENDENT, EVEN, ODD, PRIME, SUMMARIZE,
                 LENGTH, MESSAGE, MAIN, C, C8, D, D8, E, F, F8, G, G8, A, A8;
+
 terminal Double DOUBLE;
+
 terminal Integer INTEGER;
+
 terminal Character CHARACTER;    
+
 terminal ISEQUAL, NOTEQUAL, LESSTHAN, GREATERTHAN, LESSTHANOREQUALTO, GREATERTHANOREQUALTO, ISNULL,
          AND, NAND, OR, NOR, XOR, NOT, PLUS, MINUS, ASTERISK, SLASH, MOD, POWER, INCREMENT, DECREMENT,
          INCREMENTANDASSIGMENT, CURLYBRACKETO, CURLYBRACKETC, SQUAREBRACKETO, SQUAREBRACKETC, PARENTHESISO,
          PARENTHESISC, EQUAL, SEMICOLON, COMMA, COLON;
 
 /* Non-terminals */
-non terminal Instruction    arithmetic_op, arithmetic_exp, arithmetic_value, logical_op, relational_op, call, array_values,
+non terminal Instruction    arithmetic_op, arithmetic_exp, arithmetic_value, logical_op, relational_op, call,
                             logical_exp, logical_exp2, logical_value, main, procedure, function, cycle, conditional, for,
-                            while, do_while, if, switch;   
+                            while, do_while, if, switch, for_assignment, case, default_case, else;   
 
-non terminal LinkedList<Instruction>    array_dimensions, call_params, op_list, method_statement, global_statement, params,
-                                        cycle_statement;
+non terminal LinkedList<Instruction>    array_dimensions, call_params, op_list, method_statement, global_statement, params, var_list,
+                                        cycle_statement, var_declaration, var, var_declaration_assignment, var_assignment,
+                                        keep_statement, keep_var_statements, keep_array_statements, cases, else_if, array_declaration,
+                                        array, array_declaration_assignment, array_assignment ;
 
-non terminal LinkedList<LinkedList<Instruction>>    dimension;
+non terminal LinkedList<LinkedList<Instruction>>    dimension, array_values;
 
 non terminal String     call_name, note;
 
 non terminal OrderType     order_type;
 
-non terminal SymbolType     var_type;                           
+non terminal SymbolType     var_type;   
+      
+non terminal Integer    array_no_dimensions;                  
 
-non terminal 
-              
-             track, extend, extends_list, 
-             keep_statement, keep_statements,
-             var, var_declaration, var_list,  var_declaration_assignment, var_assignment,
-             array, array_declaration, array_declaration_assignment, array_no_dimensions, array_assignment,
-            else_if, else,
-            cases, case, default_case,
-             for_assignment
-             ;   
+non terminal    track, extend, extends_list
+                ;   
 
 precedence left PLUS, MINUS;
 precedence left ASTERISK, SLASH, MOD;
@@ -122,8 +133,8 @@ precedence left ISNULL;
 start with track;
 
 //---------------   TRACK    ---------------// 
-track::=    TRACK ID extend CURLYBRACKETO global_statement CURLYBRACKETC
-            | TRACK ID extend CURLYBRACKETO CURLYBRACKETC
+track::=    TRACK ID:name extend CURLYBRACKETO global_statement:instructions CURLYBRACKETC      {: track = new Track(name, instructions, nameleft, nameright); :}
+            | TRACK ID:name extend CURLYBRACKETO CURLYBRACKETC                                  {: track = new Track(name, nameleft, nameright); :}
             //Producciones de error
             | TRACK ID extend CURLYBRACKETO error CURLYBRACKETC
             | TRACK ID extend CURLYBRACKETO error global_statement CURLYBRACKETC
@@ -139,24 +150,24 @@ extends_list::=     extends_list COMMA ID
                     | ID
                     ;
 
-global_statement::=     global_statement keep_statement SEMICOLON
-                        | global_statement var SEMICOLON
-                        | global_statement array SEMICOLON
-                        | global_statement:list KEEP procedure:value            {: ((Procedure)value).setKeep(true); list.add(value); RESULT = list; :}
-                        | global_statement:list KEEP function:value             {: ((Function)value).setKeep(true); list.add(value); RESULT = list; :}
-                        | global_statement:list KEEP main:value                 {: ((Main)value).setKeep(true); list.add(value); RESULT = list; :}
-                        | global_statement:list procedure:value                 {: ((Procedure)value).setKeep(false); list.add(value); RESULT = list; :}
-                        | global_statement:list function:value                  {: ((Function)value).setKeep(false); list.add(value); RESULT = list; :}
-                        | global_statement:list main:value                      {: ((Main)value).setKeep(false); list.add(value); RESULT = list; :}
-                        | keep_statement SEMICOLON
-                        | var SEMICOLON
-                        | array SEMICOLON
-                        | KEEP procedure:value                                  {: ((Procedure)value).setKeep(true); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
-                        | KEEP function:value                                   {: ((Function)value).setKeep(true); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}  
-                        | KEEP main:value                                       {: ((Main)value).setKeep(true); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
-                        | procedure:value                                       {: ((Procedure)value).setKeep(false); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
-                        | function:value                                        {: ((Function)value).setKeep(false); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}  
-                        | main:value                                            {: ((Main)value).setKeep(false); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
+global_statement::=     global_statement:list keep_statement:keepList SEMICOLON     {: list.addAll(keepList); RESULT = list; :}
+                        | global_statement:list var:varList SEMICOLON               {: list.addAll(varList); RESULT = list; :}
+                        | global_statement:list  array:arrayList SEMICOLON          {: list.addAll(arrayList); RESULT = list; :}      
+                        | global_statement:list KEEP procedure:value                {: ((Procedure)value).setKeep(true); list.add(value); RESULT = list; :}
+                        | global_statement:list KEEP function:value                 {: ((Function)value).setKeep(true); list.add(value); RESULT = list; :}
+                        | global_statement:list KEEP main:value                     {: ((Main)value).setKeep(true); list.add(value); RESULT = list; :}
+                        | global_statement:list procedure:value                     {: ((Procedure)value).setKeep(false); list.add(value); RESULT = list; :}
+                        | global_statement:list function:value                      {: ((Function)value).setKeep(false); list.add(value); RESULT = list; :}
+                        | global_statement:list main:value                          {: ((Main)value).setKeep(false); list.add(value); RESULT = list; :}
+                        | keep_statement:keepList SEMICOLON                         {: RESULT = keepList; :}
+                        | var:varList SEMICOLON                                     {: RESULT = varList; :}
+                        | array:arraylist SEMICOLON                                 {: RESULT = arraylist; :}
+                        | KEEP procedure:value                                      {: ((Procedure)value).setKeep(true); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
+                        | KEEP function:value                                       {: ((Function)value).setKeep(true); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}  
+                        | KEEP main:value                                           {: ((Main)value).setKeep(true); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
+                        | procedure:value                                           {: ((Procedure)value).setKeep(false); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
+                        | function:value                                            {: ((Function)value).setKeep(false); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}  
+                        | main:value                                                {: ((Main)value).setKeep(false); RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
 
                         //Producciones de error
                         | global_statement error keep_statement SEMICOLON
@@ -170,33 +181,46 @@ global_statement::=     global_statement keep_statement SEMICOLON
                         | global_statement error SEMICOLON
                         ;
                         
-keep_statement::=   KEEP keep_statements
+keep_statement::=   KEEP keep_var_statements:list   {:
+                                                        for(int i=0; i<list.size(); i++){
+                                                            ((Declaration)list.get(i)).setKeep(true);
+                                                        }
+                                                        RESULT = list;
+                                                    :}
+                    | KEEP keep_array_statements:list   {:
+                                                            for(int i=0; i<list.size(); i++){
+                                                                ((ArrayDeclaration)list.get(i)).setKeep(true);
+                                                            }
+                                                            RESULT = list;
+                                                        :}
                     ;
 
-keep_statements::=  array_declaration 
-                    | array_declaration_assignment
-                    | var_declaration
-                    | var_declaration_assignment
-                    ;
+keep_array_statements::=    array_declaration:list                {: RESULT = list; :}
+                            | array_declaration_assignment:list   {: RESULT = list; :}    
+                            ;
 
-method_statement::=     method_statement:list var SEMICOLON
-                        | method_statement:list array SEMICOLON
-                        | method_statement:list conditional
-                        | method_statement:list cycle
-                        | method_statement:list RETURN logical_op SEMICOLON
-                        | method_statement:list call SEMICOLON
-                        |
+keep_var_statements::=      var_declaration:list                  {: RESULT = list; :}
+                            | var_declaration_assignment:list     {: RESULT = list; :}
+                            ;
+
+method_statement::=     method_statement:list var:varList SEMICOLON                 {:list.addAll(varList); RESULT = list; :}
+                        | method_statement:list array:arrayList SEMICOLON           {: list.addAll(arrayList); RESULT = list; :}
+                        | method_statement:list conditional:instruction             {: list.add(instruction); RESULT = list; :}
+                        | method_statement:list cycle:instruction                   {: list.add(instruction); RESULT = list; :}
+                        | method_statement:list RETURN:r logical_op:value SEMICOLON {: list.add(new Return(value, rleft, rright)); RESULT = list; :}
+                        | method_statement:list call:instruction SEMICOLON          {: list.add(instruction); RESULT = list; :}
+                        |                                                           {: RESULT = new LinkedList<Instruction>(); :}       
                         ; 
 
-cycle_statement::=     cycle_statement:list var SEMICOLON
-                        | cycle_statement:list array SEMICOLON
-                        | cycle_statement:list conditional
-                        | cycle_statement:list cycle
-                        | cycle_statement:list CONTINUE SEMICOLON
-                        | cycle_statement:list RETURN logical_op SEMICOLON
-                        | cycle_statement:list BREAK SEMICOLON
-                        | cycle_statement:list call SEMICOLON
-                        |                                                       
+cycle_statement::=     cycle_statement:list var:varList SEMICOLON                   {:list.addAll(varList); RESULT = list; :}
+                        | cycle_statement:list array:arrayList SEMICOLON            {: list.addAll(arrayList); RESULT = list; :}
+                        | cycle_statement:list conditional:instruction              {: list.add(instruction); RESULT = list; :}                         
+                        | cycle_statement:list cycle:instruction                    {: list.add(instruction); RESULT = list; :}
+                        | cycle_statement:list CONTINUE:c SEMICOLON                 {: list.add(new Continue(cleft, cright)); RESULT = list;:}
+                        | cycle_statement:list RETURN:r logical_op:value SEMICOLON  {: list.add(new Return(value, rleft, rright)); RESULT = list; :}
+                        | cycle_statement:list BREAK:b SEMICOLON                    {: list.add(new Break(bleft, bright)); RESULT = list; :}
+                        | cycle_statement:list call:instruction SEMICOLON           {: list.add(instruction); RESULT = list; :}
+                        |                                                           {: RESULT = new LinkedList<Instruction>(); :}        
                         ; 
 
 cycle::=    for:value           {: RESULT = value; :}
@@ -212,13 +236,18 @@ conditional::=  if:value        {: RESULT = value; :}
 //------------------------------------------------------------------------------------------------------//
 //-----------------------------------------------   VAR  -----------------------------------------------//
 //------------------------------------------------------------------------------------------------------//
-var::=  var_declaration
-        | var_declaration_assignment
-        | var_assignment
+var::=  var_declaration:list                {: RESULT = list; :}
+        | var_declaration_assignment:list   {: RESULT = list; :}
+        | var_assignment:list               {: RESULT = list; :}
         ;
 
 //---------------   VAR DECLARATION   ---------------//
-var_declaration::=  VAR var_type var_list
+var_declaration::=  VAR var_type:type var_list:list         {:
+                                                                for(int i=0; i<list.size(); i++){
+                                                                    ((Declaration)list.get(i)).setSymbolType(type);
+                                                                }
+                                                                RESULT = list;
+                                                            :}
                     ;
 
 var_type::=     INTEGERTYPE         {: RESULT = SymbolType.INTEGER; :}
@@ -228,31 +257,42 @@ var_type::=     INTEGERTYPE         {: RESULT = SymbolType.INTEGER; :}
                 | CHARACTERTYPE     {: RESULT = SymbolType.CHARACTER; :}
                 ;
 
-var_list::=     var_list COMMA ID
-                | ID
+var_list::=     var_list:list COMMA ID:value        {: list.add(new Declaration(value, valueleft, valueright)); RESULT = list; :}
+                | ID:value                          {: RESULT = new LinkedList<Instruction>(); RESULT.add(new Declaration(value, valueleft, valueright)); :}
                 ;
 
 //---------------   VAR DECLARATION AND ASSIGNMENT   ---------------//
-var_declaration_assignment::=   var_declaration EQUAL logical_op
-                                ;
+var_declaration_assignment::=   var_declaration:list EQUAL logical_op:value   {:
+                                                                                  for(int i=0; i<list.size(); i++){
+                                                                                        ((Declaration)list.get(i)).setValue(value);
+                                                                                    }
+                                                                                    RESULT = list;
+                                                                                :}
+                                ;                                              
+                               
 
 //---------------   VAR ASSIGNMENT   ---------------//
-var_assignment::=   ID EQUAL logical_op
-                    | ID INCREMENTANDASSIGMENT logical_op
-                    | ID INCREMENT
-                    | ID DECREMENT
+var_assignment::=   ID:id EQUAL logical_op:value                        {: RESULT = new LinkedList<Instruction>(); RESULT.add(new Assignment(id, value, idleft, idright)); :}
+                    | ID:id INCREMENTANDASSIGMENT:i logical_op:value    {: RESULT = new LinkedList<Instruction>(); RESULT.add(new Assignment(id, new Operation(new Operation(id, OperationType.ID, idleft, idright), value, OperationType.SUM, ileft, iright), idleft, idright)); :}
+                    | ID:id INCREMENT                                   {: RESULT = new LinkedList<Instruction>(); RESULT.add(new Increment(new Operation(id, OperationType.ID, idleft, idright), idleft, idright)); :} 
+                    | ID:id DECREMENT                                   {: RESULT = new LinkedList<Instruction>(); RESULT.add(new Decrement(new Operation(id, OperationType.ID, idleft, idright), idleft, idright)); :}
                     ;
 
 //------------------------------------------------------------------------------------------------------//
 //---------------------------------------------   ARRAY    ---------------------------------------------//
 //------------------------------------------------------------------------------------------------------//
-array::=    array_declaration
-            | array_declaration_assignment
-            | array_assignment
+array::=    array_declaration:list                  {: RESULT = list; :}
+            | array_declaration_assignment:list     {: RESULT = list; :}
+            | array_assignment:list                 {: RESULT = list; :}
             ;
 
 //---------------   ARRAY DECLARATION   ---------------//
-array_declaration::=    VAR var_type ARRAY var_list array_dimensions
+array_declaration::=    VAR var_type:type ARRAY var_list:declarations array_dimensions:dimensions   {:
+                                                                                                        RESULT = new LinkedList<Instruction>();
+                                                                                                        for(int i=0; i<declarations.size(); i++){
+                                                                                                            RESULT.add(new ArrayDeclaration((Declaration)declarations.get(i), type, dimensions));
+                                                                                                        }
+                                                                                                    :}
                         ;
 
 array_dimensions::=     array_dimensions:list SQUAREBRACKETO logical_op:value SQUAREBRACKETC    {: list.add(value); RESULT = list; :}
@@ -260,19 +300,20 @@ array_dimensions::=     array_dimensions:list SQUAREBRACKETO logical_op:value SQ
                         ;
 
 //---------------   ARRAY DECLARATION AND ASSIGNMENT    ---------------//
-array_declaration_assignment::=    VAR var_type ARRAY var_list array_no_dimensions EQUAL array_values
+array_declaration_assignment::=    VAR var_type:type ARRAY var_list:declarations array_no_dimensions:dimensions EQUAL array_values:value    {:
+                                                                                                                                                RESULT = new LinkedList<Instruction>();
+                                                                                                                                                for(int i=0; i<declarations.size(); i++){
+                                                                                                                                                    RESULT.add(new ArrayDeclaration((Declaration)declarations.get(i), type, dimensions, value));
+                                                                                                                                                }
+                                                                                                                                            :}
                                     ;
 
-array_no_dimensions::=      array_no_dimensions SQUAREBRACKETO SQUAREBRACKETC
-                            | SQUAREBRACKETO  SQUAREBRACKETC
+array_no_dimensions::=      array_no_dimensions:counter SQUAREBRACKETO SQUAREBRACKETC   {: RESULT =  counter+1; :}
+                            | SQUAREBRACKETO  SQUAREBRACKETC                            {: RESULT = 1; :}
                             ;
 
-array_values::=     CURLYBRACKETO op_list:values CURLYBRACKETC         {:
-                                                                        LinkedList<LinkedList<Instruction>> tempList = new LinkedList();
-                                                                        tempList.add(values);
-                                                                        RESULT = new ArrayValues(tempList); 
-                                                                       :}
-                    | CURLYBRACKETO dimension:values CURLYBRACKETC     {: RESULT = new ArrayValues(values); :}
+array_values::=     CURLYBRACKETO:c op_list:values CURLYBRACKETC         {: RESULT = new LinkedList(); RESULT.add(values); :}
+                    | CURLYBRACKETO:c dimension:values CURLYBRACKETC     {: RESULT = values; :}
                     ;
 
 op_list::=  op_list:list COMMA logical_op:value     {: list.add(value); RESULT = list; :}
@@ -284,52 +325,52 @@ dimension::=    dimension:list COMMA CURLYBRACKETO op_list:values CURLYBRACKETC 
                 ;
 
 //---------------   ARRAY ASSIGNMENT   ---------------//
-array_assignment::=     ID array_dimensions EQUAL logical_op
+array_assignment::=     ID:id array_dimensions:dimensions EQUAL logical_op:value        {: RESULT = new LinkedList(); RESULT.add(new ArrayAssignment(id, dimensions, value, idleft, idright)); :}
                         ;
 
 
 //------------------------------------------------------------------------------------------------------//
 //-----------------------------------------------   IF   -----------------------------------------------//
 //------------------------------------------------------------------------------------------------------//
-if::=               IF PARENTHESISO logical_op PARENTHESISC CURLYBRACKETO method_statement CURLYBRACKETC else_if  else
+if::=               IF:i PARENTHESISO logical_op:condition PARENTHESISC CURLYBRACKETO method_statement:instructions CURLYBRACKETC else_if:elseList else:elseInstruction     {: RESULT = new If(condition, instructions, elseList, elseInstruction, ileft, iright); :}
                     ;
 
-else_if::=          else_if ELSE IF PARENTHESISO logical_op PARENTHESISC CURLYBRACKETO method_statement CURLYBRACKETC
-                    |                                                                                                                 
+else_if::=          else_if:list ELSE:e IF PARENTHESISO logical_op:condition PARENTHESISC CURLYBRACKETO method_statement:instructions CURLYBRACKETC     {: list.add(new ElseIf(condition, instructions, eleft, eright)); RESULT = list; :}
+                    |                                                                                                                                   {: RESULT = new LinkedList<Instruction>(); :}                                                                                                      
                     ;
 
-else::=             ELSE CURLYBRACKETO method_statement CURLYBRACKETC    
-                    |                                        
+else::=             ELSE:e CURLYBRACKETO method_statement:instructions CURLYBRACKETC    {: RESULT = new Else(instructions, eleft, eright); :}   
+                    |                                                                   {: RESULT = null; :}
                     ;
 
 
 //------------------------------------------------------------------------------------------------------//
 //---------------------------------------------   SWITCH   ---------------------------------------------//
 //------------------------------------------------------------------------------------------------------//
-switch::=   SWITCH PARENTHESISO logical_op PARENTHESISC CURLYBRACKETO cases default_case CURLYBRACKETC
+switch::=   SWITCH:s PARENTHESISO ID:id PARENTHESISC CURLYBRACKETO cases:cases default_case:defaultC CURLYBRACKETC  {: RESULT = new Switch(new Operation(id, OperationType.ID, idleft,idright), cases, defaultC, idleft, idright); :}
+            | SWITCH:s PARENTHESISO ID:id PARENTHESISC CURLYBRACKETO cases:cases CURLYBRACKETC                      {: RESULT = new Switch(new Operation(id, OperationType.ID, idleft,idright), cases, idleft, idright); :}
             ;
 
-cases::=    cases case
-            | 
+cases::=    cases:list case:instruction     {: list.add(instruction); RESULT = list; :}
+            |                               {: RESULT = new LinkedList<Instruction>(); :}
             ;
 
-case::=     CASE logical_op COLON method_statement BREAK SEMICOLON
-            | CASE logical_op COLON method_statement
+case::=     CASE:c logical_op:value COLON method_statement:instructions BREAK:b SEMICOLON   {: instructions.add(new Break(bleft, bright)); RESULT = new Case(value, instructions, cleft, cright); :}
+            | CASE:c logical_op:value COLON method_statement:instructions                   {: RESULT = new Case(value, instructions, cleft, cright); :}
             ;
 
-default_case::=     DEFAULT COLON method_statement BREAK SEMICOLON
-                    | DEFAULT COLON method_statement
-                    | 
+default_case::=     DEFAULT:d COLON method_statement:instructions BREAK:b SEMICOLON           {: instructions.add(new Break(bleft, bright)); RESULT = new DefaultCase(instructions, dleft, dright); :}
+                    | DEFAULT:d COLON method_statement:instructions                           {: RESULT = new DefaultCase(instructions, dleft, dright); :}
                     ;
 
 //------------------------------------------------------------------------------------------------------//
 //---------------------------------------------     FOR    ---------------------------------------------//
 //------------------------------------------------------------------------------------------------------//
-for::=  FOR PARENTHESISO for_assignment SEMICOLON logical_op SEMICOLON var_assignment PARENTHESISC CURLYBRACKETO cycle_statement CURLYBRACKETC
+for::=  FOR:f PARENTHESISO for_assignment:assignment SEMICOLON logical_op:condition SEMICOLON var_assignment:action PARENTHESISC CURLYBRACKETO cycle_statement:instructions  CURLYBRACKETC    {: RESULT = new For(assignment, condition, action.get(0), instructions, fleft, fright); :}
         ;
 
-for_assignment::=   VAR var_type ID EQUAL logical_op
-                    | ID EQUAL logical_op 
+for_assignment::=   VAR var_type:type ID:id EQUAL logical_op:value    {: RESULT = new Declaration(type, id, value, idleft, idright); :}
+                    | ID:id EQUAL logical_op:value                    {: RESULT = new Assignment(id, value, idleft, idright); :}
                     ;
 
 
@@ -363,9 +404,7 @@ procedure::=    ID:id PARENTHESISO params:params PARENTHESISC CURLYBRACKETO meth
                 ;
 
 params::=   params:list COMMA var_type:type ID:id                                       {: list.add(new Param(id, type, idleft, idright)); RESULT = list; :}
-            | params:list COMMA var_type:type ARRAY ID:id array_dimensions:dimensions   {: list.add(new ArrayParam(id, type, dimensions, idleft, idright)); RESULT = list; :}
             | var_type:type ID:id                                                       {: RESULT = new LinkedList<Instruction>(); RESULT.add(new Param(id, type, idleft, idright)); :}
-            | var_type:type ARRAY ID:id array_dimensions:dimensions                     {: RESULT = new LinkedList<Instruction>(); RESULT.add(new ArrayParam(id, type, dimensions, idleft, idright)); :} 
             ;
 
 
@@ -376,9 +415,9 @@ call::=     call_name:name PARENTHESISO call_params:params PARENTHESISC         
             | call_name:name  PARENTHESISO PARENTHESISC                                                                         {: RESULT = new Call(name, nameleft, nameright); :}
             | PLAY:p PARENTHESISO note:note COMMA logical_op:eighth COMMA logical_op:time COMMA logical_op:channel PARENTHESISC {: RESULT = new Play(note, eighth, time, channel, pleft, pright); :}
             | WAIT:w PARENTHESISO logical_op:time COMMA logical_op:channel PARENTHESISC                                         {: RESULT = new Wait(time, channel, wleft, wright); :}
-            | ORDER:o PARENTHESISO logical_op:value COMMA order_type:type PARENTHESISC                                          {: RESULT = new Order(value, type, oleft, oright); :}
+            | ORDER:o PARENTHESISO ID:value COMMA order_type:type PARENTHESISC                                                  {: RESULT = new Order(new Operation(value, OperationType.ALL_ARRAY, valueleft, valueright), type, oleft, oright); :}
             | ORDER:o PARENTHESISO array_values:values COMMA order_type:type PARENTHESISC                                       {: RESULT = new Order(values, type, oleft, oright); :}
-            | SUMMARIZE:s PARENTHESISO logical_op:value PARENTHESISC                                                            {: RESULT = new Summarize(value, sleft, sright); :}
+            | SUMMARIZE:s PARENTHESISO ID:value PARENTHESISC                                                                    {: RESULT = new Summarize(new Operation(value, OperationType.ALL_ARRAY, valueleft, valueright), sleft, sright); :}
             | SUMMARIZE:s PARENTHESISO  array_values:values PARENTHESISC                                                        {: RESULT = new Summarize(values, sleft, sright); :}    
             | LENGTH:n PARENTHESISO logical_op:value PARENTHESISC                                                               {: RESULT = new Length(value, nleft, nright); :}
             | LENGTH:n PARENTHESISO array_values:values PARENTHESISC                                                            {: RESULT = new Length(values, nleft, nright); :}
@@ -390,7 +429,7 @@ call_name::=    ID:value        {: RESULT = value; :}
                 ;
 
 call_params::=  call_params:list COMMA logical_op:value      {: list.add(value); RESULT = list; :}
-                | logical_op: value                          {: RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
+                | logical_op:value                           {: RESULT = new LinkedList<Instruction>(); RESULT.add(value); :}
                 ;
 
 note::=     A       {: RESULT = "A"; :}
@@ -425,21 +464,21 @@ main::=     MAIN:name PARENTHESISO PARENTHESISC CURLYBRACKETO method_statement:i
 //------------------------------------------------------------------------------------------------------//
 
 //---------------   ARITHMETIC EXPRESSIONS   ---------------//     
-arithmetic_op::=    arithmetic_op:value1 PLUS arithmetic_exp:value2             {: RESULT = new Operation(value1, value2, OperationType.SUM, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 MINUS arithmetic_exp:value2          {: RESULT = new Operation(value1, value2, OperationType.SUBTRACTION, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 ASTERISK arithmetic_exp:value2       {: RESULT = new Operation(value1, value2, OperationType.MULTIPLICATION, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 SLASH arithmetic_exp:value2          {: RESULT = new Operation(value1, value2, OperationType.DIVISION, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 MOD arithmetic_exp:value2            {: RESULT = new Operation(value1, value2, OperationType.MOD, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 POWER arithmetic_exp:value2          {: RESULT = new Operation(value1, value2, OperationType.POTENTIATION, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_exp:value                                      {: RESULT = value; :}
+arithmetic_op::=    arithmetic_op:value1 PLUS:o arithmetic_exp:value2             {: RESULT = new Operation(value1, value2, OperationType.SUM, oleft, oright); :}
+                    | arithmetic_op:value1 MINUS:o arithmetic_exp:value2          {: RESULT = new Operation(value1, value2, OperationType.SUBTRACTION, oleft, oright); :}
+                    | arithmetic_op:value1 ASTERISK:o arithmetic_exp:value2       {: RESULT = new Operation(value1, value2, OperationType.MULTIPLICATION, oleft, oright); :}
+                    | arithmetic_op:value1 SLASH:o arithmetic_exp:value2          {: RESULT = new Operation(value1, value2, OperationType.DIVISION, oleft, oright); :}
+                    | arithmetic_op:value1 MOD:o arithmetic_exp:value2            {: RESULT = new Operation(value1, value2, OperationType.MOD, oleft, oright); :}
+                    | arithmetic_op:value1 POWER:o arithmetic_exp:value2          {: RESULT = new Operation(value1, value2, OperationType.POTENTIATION, oleft, oright); :}
+                    | arithmetic_exp:value                                        {: RESULT = value; :}
                     ;
 
-arithmetic_exp::=   PLUS arithmetic_value:value             {: RESULT = new Operation(value, OperationType.PLUS, valueleft, valueright); :}
-                    | MINUS arithmetic_value:value          {: RESULT = new Operation(value, OperationType.MINUS, valueleft, valueright); :}
-                    | arithmetic_value:value                {: RESULT = value; :}
+arithmetic_exp::=   PLUS:o arithmetic_value:value             {: RESULT = new Operation(value, OperationType.PLUS, oleft, oright); :}
+                    | MINUS:o arithmetic_value:value          {: RESULT = new Operation(value, OperationType.MINUS, oleft, oright); :}
+                    | arithmetic_value:value                  {: RESULT = value; :}
                     ;
                     
-arithmetic_value::=     PARENTHESISO logical_op PARENTHESISC
+arithmetic_value::=     PARENTHESISO logical_op:value PARENTHESISC  {: RESULT = value; :}
                         | DOUBLE:value                              {: RESULT = new Operation(value, valueleft, valueright); :}
                         | INTEGER:value                             {: RESULT = new Operation(value, valueleft, valueright); :}
                         | CHARACTER:value                           {: RESULT = new Operation(value, valueleft, valueright); :}
@@ -459,26 +498,27 @@ arithmetic_value::=     PARENTHESISO logical_op PARENTHESISC
                         ;
 
 //---------------   RELATIONAL EXPRESSIONS   ---------------//  
-relational_op::=    arithmetic_op:value1 ISEQUAL arithmetic_op:value2                   {: RESULT = new Operation(value1, value2, OperationType.ISEQUAL, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 NOTEQUAL arithmetic_op:value2                {: RESULT = new Operation(value1, value2, OperationType.NOTEQUAL, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 GREATERTHAN arithmetic_op:value2             {: RESULT = new Operation(value1, value2, OperationType.GREATERTHAN, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 LESSTHAN arithmetic_op:value2                {: RESULT = new Operation(value1, value2, OperationType.LESSTHAN, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 GREATERTHANOREQUALTO arithmetic_op:value2    {: RESULT = new Operation(value1, value2, OperationType.GREATERTHANOREQUALTO, value1left, value1right, value2left, value2right); :}
-                    | arithmetic_op:value1 LESSTHANOREQUALTO arithmetic_op:value2       {: RESULT = new Operation(value1, value2, OperationType.LESSTHANOREQUALTO, value1left, value1right, value2left, value2right); :}
-                    | ISNULL ID:value                                                   {: RESULT = new Operation(value, OperationType.ISNULL, valueleft, valueright); :}
-                    | arithmetic_op:value                                               {: RESULT = value; :}
+relational_op::=    arithmetic_op:value1 ISEQUAL:o arithmetic_op:value2                   {: RESULT = new Operation(value1, value2, OperationType.ISEQUAL, oleft, oright); :}
+                    | arithmetic_op:value1 NOTEQUAL:o arithmetic_op:value2                {: RESULT = new Operation(value1, value2, OperationType.NOTEQUAL, oleft, oright); :}
+                    | arithmetic_op:value1 GREATERTHAN:o arithmetic_op:value2             {: RESULT = new Operation(value1, value2, OperationType.GREATERTHAN, oleft, oright); :}
+                    | arithmetic_op:value1 LESSTHAN:o arithmetic_op:value2                {: RESULT = new Operation(value1, value2, OperationType.LESSTHAN, oleft, oright); :}
+                    | arithmetic_op:value1 GREATERTHANOREQUALTO:o arithmetic_op:value2    {: RESULT = new Operation(value1, value2, OperationType.GREATERTHANOREQUALTO, oleft, oright); :}
+                    | arithmetic_op:value1 LESSTHANOREQUALTO:o arithmetic_op:value2       {: RESULT = new Operation(value1, value2, OperationType.LESSTHANOREQUALTO, oleft, oright); :}
+                    | ISNULL:o ID:value array_dimensions:dimensions                       {: RESULT = new Operation(new Operation(value, dimensions, valueleft, valueright), OperationType.ISNULL, oleft, oright); :} 
+                    | ISNULL:o ID:value                                                   {: RESULT = new Operation(new Operation(value, OperationType.ID, valueleft, valueright), OperationType.ISNULL, oleft, oright); :}
+                    | arithmetic_op:value                                                 {: RESULT = value; :}
                     ;
 
 //---------------   LOGICAL EXPRESSIONS   ---------------//
-logical_op::=   logical_op:value1 OR logical_exp:value2         {: RESULT = new Operation(value1, value2, OperationType.OR, value1left, value1right, value2left, value2right); :}
-                | logical_op:value1 NOR logical_exp:value2      {: RESULT = new Operation(value1, value2, OperationType.NOR, value1left, value1right, value2left, value2right); :}
-                | logical_op:value1 XOR logical_exp:value2      {: RESULT = new Operation(value1, value2, OperationType.XOR, value1left, value1right, value2left, value2right); :}
-                | logical_exp:value                             {: RESULT = value; :}                      
+logical_op::=   logical_op:value1 OR:o logical_exp:value2         {: RESULT = new Operation(value1, value2, OperationType.OR, oleft, oright); :}
+                | logical_op:value1 NOR:o logical_exp:value2      {: RESULT = new Operation(value1, value2, OperationType.NOR, oleft, oright); :}
+                | logical_op:value1 XOR:o logical_exp:value2      {: RESULT = new Operation(value1, value2, OperationType.XOR, oleft, oright); :}
+                | logical_exp:value                               {: RESULT = value; :}                      
                 ;
 
-logical_exp::=  logical_exp:value1 AND logical_exp2:value2      {: RESULT = new Operation(value1, value2, OperationType.AND, value1left, value1right, value2left, value2right); :}
-                | logical_exp:value1 NAND logical_exp2:value2   {: RESULT = new Operation(value1, value2, OperationType.NAND, value1left, value1right, value2left, value2right); :}
-                | logical_exp2:value                            {: RESULT = value; :}
+logical_exp::=  logical_exp:value1 AND:o logical_exp2:value2      {: RESULT = new Operation(value1, value2, OperationType.AND, oleft, oright); :}
+                | logical_exp:value1 NAND:o logical_exp2:value2   {: RESULT = new Operation(value1, value2, OperationType.NAND, oleft, oright); :}
+                | logical_exp2:value                              {: RESULT = value; :}
                 ;
                 
 logical_exp2::=     NOT logical_value:value     {: RESULT = new Operation(value, OperationType.NOT, valueleft, valueright); :}
