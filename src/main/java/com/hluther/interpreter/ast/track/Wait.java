@@ -3,7 +3,10 @@ package com.hluther.interpreter.ast.track;
 import com.hluther.interpreter.ast.instruction.Node;
 import com.hluther.interpreter.ast.instruction.Instruction;
 import com.hluther.entity.AnalysisError;
+import com.hluther.entity.Channel;
 import com.hluther.entity.MError;
+import com.hluther.entity.Melody;
+import com.hluther.entity.Pause;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
@@ -40,7 +43,24 @@ public class Wait extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
-        return null;
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        int timeVal= (int)time.execute(typeTable, symbolTable, scope, track);
+        int channelVal= (int)channel.execute(typeTable, symbolTable, scope, track);
+        
+          if(timeVal < 0|| channelVal < 0){
+            throw  new NumberFormatException();
+        }
+        
+        //Obtener la melodia que se esta creando
+        Melody melody = track.getMelody();
+
+        //Verificar si ya existe el canal, de lo contrario agregarlo y agregar la nota sobre el canal.
+        Channel channel = melody.getChannel(channelVal);
+        if(channel == null){
+            channel = melody.addChannel(channelVal);
+        }
+        channel.addAction(new Pause(timeVal), timeVal);
+        return timeVal;
+
     }
 }

@@ -10,6 +10,7 @@ public enum OperationType {
     BOOLEAN,
     STRING,
     ID,
+    NULL_VAR,
     ARRAY,
     ALL_ARRAY,
     CALL,

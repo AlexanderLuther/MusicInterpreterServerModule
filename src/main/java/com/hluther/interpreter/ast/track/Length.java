@@ -98,8 +98,12 @@ public class Length extends Node implements Instruction {
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
-        return null;
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        if(arrayContent == null){
+            return content.execute(typeTable, symbolTable, scope, track).toString().length();
+        } else{
+            return arrayContent.size() * arrayContent.getFirst().size();
+        }
     }
     
 }

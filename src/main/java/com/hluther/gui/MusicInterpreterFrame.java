@@ -1,32 +1,153 @@
 package com.hluther.gui;
 
+import com.hluther.controller.AnalysisController;
+import com.hluther.controller.MelodyFileController;
+import com.hluther.entity.AnalysisError;
+import com.hluther.entity.Melody;
+import com.hluther.gui.errorsDialog.ErrorsDialog;
 import com.hluther.gui.textEditor.MTextArea;
-import javax.swing.JFileChooser;
+import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
+import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
+import java.util.LinkedList;
+import java.util.Stack;
+import javax.swing.JOptionPane;
+import javax.swing.JTextPane;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.html.HTMLDocument;
+import org.jfugue.player.Player;
 /**
  *
  * @author helmuth
  */
 public class MusicInterpreterFrame extends javax.swing.JFrame {
 
+    //Instancia para la tabla de melodias
+     private DefaultTableModel tableModel;
+     private LinkedList<Melody> melodies;
+     private boolean  editingMelody;
+     private String oldname;
+    
+    //Instancia para el editor de texto.
     private MTextArea mTextArea;
-    private HTMLDocument doc;
-    private DefaultTableModel tableModel;
-    private JFileChooser fileChooser;
+    
+    //Instancias para el interprete
+    AnalysisController analysisController;
+    AnalysisError analysisError;
+    ErrorsDialog errorsDialog;
+    Track track;
+    
+    //Instancias para ejecucion de melodias
+    private Player player;
+    private Melody playing;
+    
+    //Instancias para manejo de melodias en archivo binario
+    MelodyFileController melodyFileController;
+    
+    //Instancia para la grafica
+    private RealTimeChart currentChart;
+
+    public JTextPane getOutputArea() {
+        return outputArea;
+    }
     
     
     public MusicInterpreterFrame() {
         initComponents();
         this.setLocationRelativeTo(null);
         this.initializeInstances();
+        this.addMelodies();
     }
     
     private void initializeInstances(){
         this.mTextArea = new MTextArea(textAreaPane, positionLabel);
-        this.tableModel = (DefaultTableModel)tracksTable.getModel();
+        this.analysisController = new AnalysisController();
+        this.errorsDialog = new ErrorsDialog(this, false);
+        this.player = new Player();
+        this.melodyFileController = new MelodyFileController(this);
+        this.tableModel = (DefaultTableModel)melodiesTable.getModel();
+    }
+      
+    private void saveMelody(Melody melody){
+        LinkedList<Melody> melodies = melodyFileController.getMelodies();
+        boolean canceled = false;
+        for(Melody currentMelody : melodies){
+            if(currentMelody.getId().equals(melody.getId()) && !editingMelody){
+                switch (JOptionPane.showConfirmDialog(this, "<html><center>Ya existe una melodia con el nombre "+melody.getId()+", ¿Desea sobreescribirla?", "Mensaje", 1, 3)) {
+                    case JOptionPane.CANCEL_OPTION, JOptionPane.CLOSED_OPTION, JOptionPane.NO_OPTION ->{ return;}
+                    case JOptionPane.OK_OPTION ->{
+                        melodies.remove(currentMelody);
+                        JOptionPane.showMessageDialog(this, "<html><center>Melodia "+melody.getId()+" sobreescrita exitosamente<br>Puede reproducirla en el area de biblioteca.</center></html>", "Construccion Finalizada", 3);
+                    }
+                }
+                break;
+            }
+            if(currentMelody.getId().equals(oldname) && editingMelody){    
+             
+                melodies.remove(currentMelody);
+                JOptionPane.showMessageDialog(this, "<html><center>Melodia "+melody.getId()+" modificada exitosamente<br>Puede reproducirla en el area de biblioteca.</center></html>", "Construccion Finalizada", 3);
+                editingMelody = false; 
+                break;
+            }
+
+        }
+
+  
+        melodies.add(melody);
+        melodyFileController.saveMelodies(melodies); 
+        addMelodies();
+        tabbedPane.setSelectedIndex(0);
+       
+    }
+    
+     private void addMelodies(){
+        Thread thread = new Thread(){
+        @Override 
+        public  void run(){
+            try {
+               tableModel.setRowCount(0);
+                melodies = melodyFileController.getMelodies();
+                if(melodies == null){
+                   JOptionPane.showMessageDialog(MusicInterpreterFrame.this, "No se pudieron recuperar las pistas desde el archivo Tracks.bin", "Error Grave", 0);
+                } else{
+                    melodies.forEach(melody -> {
+                       tableModel.addRow(new Object[]{melody.getId(), melody.getDuration()+" seg"});
+                   });
+                }
+            }    
+            catch (NullPointerException ex) {
+                System.out.println(ex.getMessage() );
+            }
+        }};
+        thread.start();
+    }
+     
+    private void stopPlaying(){
+         if(playing != null){
+            playing.setExit(true);
+           // currentChart.setExit(true);
+        }
     }
 
+    private void play(){
+        if(melodiesTable.getSelectedRow() != -1){
+            if(playing != null){
+                playing.setExit(true);
+            }
+            
+            playing = melodies.get(melodiesTable.getSelectedRow());
+            playing.setExit(false);
+            playing.play(new Thread(), player);
+            if(playing.getChannels().size() > 0){
+                currentChart = new RealTimeChart ("Grafico De Frecuencias", "Grafico de Frecuencias", "Frecuencia", playing.getChannels().get(0));
+                (new Thread(currentChart)).start(); 
+                playerPanel.add(currentChart);
+                playerPanel.repaint();
+                playerPanel.revalidate();
+            }
+        }
+    }
+    
+   
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -45,7 +166,7 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
         tablePanel = new javax.swing.JPanel();
         jPanel12 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tracksTable = new javax.swing.JTable();
+        melodiesTable = new javax.swing.JTable();
         jPanel13 = new javax.swing.JPanel();
         jPanel14 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -197,18 +318,27 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
         jPanel12.setLayout(new javax.swing.BoxLayout(jPanel12, javax.swing.BoxLayout.LINE_AXIS));
 
-        tracksTable.setModel(new javax.swing.table.DefaultTableModel(
+        melodiesTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+                "Nombre", "Duracion"
             }
-        ));
-        jScrollPane1.setViewportView(tracksTable);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(melodiesTable);
+        if (melodiesTable.getColumnModel().getColumnCount() > 0) {
+            melodiesTable.getColumnModel().getColumn(0).setResizable(false);
+            melodiesTable.getColumnModel().getColumn(1).setResizable(false);
+        }
 
         jPanel12.add(jScrollPane1);
 
@@ -221,16 +351,24 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
         listsTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+                "Nombre"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane3.setViewportView(listsTable);
+        if (listsTable.getColumnModel().getColumnCount() > 0) {
+            listsTable.getColumnModel().getColumn(0).setResizable(false);
+        }
 
         jPanel14.add(jScrollPane3);
 
@@ -261,6 +399,11 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
         createButton.setText("Crear");
         createButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         createButton.setPreferredSize(new java.awt.Dimension(100, 30));
+        createButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                createButtonActionPerformed(evt);
+            }
+        });
         jPanel2.add(createButton, new java.awt.GridBagConstraints());
 
         tracksButtonsPanel.add(jPanel2);
@@ -269,6 +412,11 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
         editButton.setText("Editar");
         editButton.setPreferredSize(new java.awt.Dimension(100, 30));
+        editButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                editButtonActionPerformed(evt);
+            }
+        });
         jPanel3.add(editButton, new java.awt.GridBagConstraints());
 
         tracksButtonsPanel.add(jPanel3);
@@ -277,6 +425,11 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
         playTrackButton.setText("Reproducir");
         playTrackButton.setPreferredSize(new java.awt.Dimension(100, 30));
+        playTrackButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playTrackButtonActionPerformed(evt);
+            }
+        });
         jPanel4.add(playTrackButton, new java.awt.GridBagConstraints());
 
         tracksButtonsPanel.add(jPanel4);
@@ -285,6 +438,11 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
         deleteButton.setText("Eliminar");
         deleteButton.setPreferredSize(new java.awt.Dimension(100, 30));
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
         jPanel5.add(deleteButton, new java.awt.GridBagConstraints());
 
         tracksButtonsPanel.add(jPanel5);
@@ -357,15 +515,25 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
         playButton.setMaximumSize(new java.awt.Dimension(100, 100));
         playButton.setMinimumSize(new java.awt.Dimension(100, 100));
         playButton.setPreferredSize(new java.awt.Dimension(100, 100));
+        playButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playButtonActionPerformed(evt);
+            }
+        });
         playerButtonsPanel.add(playButton);
 
-        pauseButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/boton-de-pausa.png"))); // NOI18N
+        pauseButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/detener.png"))); // NOI18N
         pauseButton.setBorder(null);
         pauseButton.setBorderPainted(false);
         pauseButton.setContentAreaFilled(false);
         pauseButton.setMaximumSize(new java.awt.Dimension(100, 100));
         pauseButton.setMinimumSize(new java.awt.Dimension(100, 100));
         pauseButton.setPreferredSize(new java.awt.Dimension(100, 100));
+        pauseButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pauseButtonActionPerformed(evt);
+            }
+        });
         playerButtonsPanel.add(pauseButton);
 
         jPanel7.setPreferredSize(new java.awt.Dimension(30, 66));
@@ -415,6 +583,11 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
         compileButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/compile.png"))); // NOI18N
         compileButton.setBorderPainted(false);
         compileButton.setContentAreaFilled(false);
+        compileButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                compileButtonActionPerformed(evt);
+            }
+        });
         jPanel15.add(compileButton);
 
         jPanel9.add(jPanel15, java.awt.BorderLayout.PAGE_START);
@@ -437,7 +610,7 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
 
         jPanel10.add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
-        positionLabel.setFont(new java.awt.Font("Roboto", 1, 16)); // NOI18N
+        positionLabel.setFont(new java.awt.Font("Roboto", 1, 14)); // NOI18N
         positionLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         positionLabel.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 102, 102), 2, true));
         positionLabel.setMaximumSize(new java.awt.Dimension(53, 25));
@@ -508,6 +681,100 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void compileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compileButtonActionPerformed
+       Thread thread = new Thread(){
+        @Override 
+        public  void run(){
+            try{
+                 outputArea.setText("ANALISIS INICIADO");
+                String text = mTextArea.getText();
+
+                //Ejecutar analisis y obtener ast y errores resultantes
+                analysisController.analyzeTrack(text);
+                track = analysisController.getTrack();
+                analysisError = analysisController.getAnalysisError();
+                track.setConsole(outputArea);
+
+                //Realizar analisis del ast
+                try{
+                    track.analyze(new TypeTable(), new SymbolTable(), new Stack<>(),  analysisError);
+                } catch(NullPointerException e){
+                    //Mostrar error en el log
+                }
+
+                //Si no existen errores realizar la ejecucion
+                if(analysisError.getLexicalErrors().isEmpty() && analysisError.getSemanticErrors().isEmpty() && analysisError.getSintacticErrors().isEmpty()){
+                   track.execute(new TypeTable(), new SymbolTable(), new Stack<>(), track);
+
+                   //Si no existen errores obtener melodia, setearle su codigo y mostrar opcion de guardado
+                   track.getMelody().setCode(text);
+                   int answer = JOptionPane.showConfirmDialog(rootPane, "Construccion exitosa. ¿Desea guardar la cancion "+ track.getMelody().getId()+"?");
+                    switch (answer) {
+                        case JOptionPane.CANCEL_OPTION, JOptionPane.CLOSED_OPTION ->{}
+                        case JOptionPane.OK_OPTION ->{
+                            saveMelody(track.getMelody());
+                        }
+                    }
+                } else{
+                    errorsDialog.showErrors(analysisError);
+                }
+            } catch(ArithmeticException a){
+               outputArea.setText("Error de ejecucion. Division entre 0");
+            } catch(NegativeArraySizeException n){
+                outputArea.setText("Error de ejecucion. Declaracion de arreglo con indices negativos");
+            } catch(ArrayIndexOutOfBoundsException ar){
+                outputArea.setText("Error de ejecucion. Acceso a arreglo fuera de los limites");
+            } catch(NumberFormatException nu){
+                 outputArea.setText("Error de ejecucion. Uso de valores negativos en funcion Reproducir|Esperar.");
+            }
+        }};
+        thread.start();
+    }//GEN-LAST:event_compileButtonActionPerformed
+
+    private void createButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createButtonActionPerformed
+        stopPlaying();
+         editingMelody = false;
+        mTextArea.setText("");
+        outputArea.setText("");
+        tabbedPane.setSelectedIndex(1);
+       
+    }//GEN-LAST:event_createButtonActionPerformed
+
+    private void editButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editButtonActionPerformed
+        stopPlaying(); 
+        if(melodiesTable.getSelectedRow() != -1){
+            outputArea.setText("");
+            mTextArea.setText(melodies.get(melodiesTable.getSelectedRow()).getCode());
+            oldname = melodies.get(melodiesTable.getSelectedRow()).getId();
+            tabbedPane.setSelectedIndex(1);
+            editingMelody = true;
+        }
+        
+    }//GEN-LAST:event_editButtonActionPerformed
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        if(melodiesTable.getSelectedRow() != -1){
+            melodies.remove(melodiesTable.getSelectedRow());
+            melodyFileController.saveMelodies(melodies);
+            addMelodies();
+        }
+    }//GEN-LAST:event_deleteButtonActionPerformed
+
+    private void playTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playTrackButtonActionPerformed
+        play();
+    }//GEN-LAST:event_playTrackButtonActionPerformed
+
+    private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
+        play();       
+    }//GEN-LAST:event_playButtonActionPerformed
+
+    private void pauseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pauseButtonActionPerformed
+        if(playing != null){
+            playing.setExit(true);
+          //  currentChart.setExit(true);
+        }
+    }//GEN-LAST:event_pauseButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -589,6 +856,7 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
     private javax.swing.JPanel leftMargin;
     private javax.swing.JPanel library;
     private javax.swing.JTable listsTable;
+    private javax.swing.JTable melodiesTable;
     private javax.swing.JTextPane outputArea;
     private javax.swing.JButton pauseButton;
     private javax.swing.JButton playButton;
@@ -605,7 +873,6 @@ public class MusicInterpreterFrame extends javax.swing.JFrame {
     private javax.swing.JPanel topMargin;
     private javax.swing.JPanel tracksArea;
     private javax.swing.JPanel tracksButtonsPanel;
-    private javax.swing.JTable tracksTable;
     private javax.swing.JPanel tracksTittlePanel;
     // End of variables declaration//GEN-END:variables
 }

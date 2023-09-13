@@ -15,6 +15,8 @@ public abstract class Method extends Node{
     private LinkedList<Instruction> params;
     private LinkedList<Instruction> instructions;
     private boolean keep;
+    
+    private LinkedList<Instruction> paramsValues;
 
     public Method(SymbolType symbolType, String id, LinkedList<Instruction> params, LinkedList<Instruction> instructions, int row, int column) {
         super(row, column);
@@ -54,6 +56,14 @@ public abstract class Method extends Node{
 
     public LinkedList<Instruction> getInstructions() {
         return instructions;
+    }
+
+    public void setParamsValues(LinkedList<Instruction> paramsValues) {
+        this.paramsValues = paramsValues;
+    }
+
+    public LinkedList<Instruction> getParamsValues() {
+        return paramsValues;
     }
 
     /**

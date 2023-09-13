@@ -2,11 +2,13 @@ package com.hluther.interpreter.ast.instruction;
 
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
+import com.hluther.interpreter.ast.method.Method;
 import com.hluther.interpreter.ast.operation.Operation;
 import com.hluther.interpreter.ast.table.symbolTable.Symbol;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 /**
@@ -68,8 +70,45 @@ public class Call extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
-        return null;
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        String identifier = id;   
+        Object tempVal;
+        Instruction method;
+        
+        //Crear el id de la funcion o procedimiento que se desea llamar
+       for (Instruction instruction : paramsValue) {
+           tempVal = instruction.execute(typeTable, symbolTable, scope, track);
+           if(tempVal instanceof Double){
+               identifier+= "_double";
+               continue;
+           }
+           if(tempVal instanceof Integer){
+               identifier+= "_integer";
+                continue;
+           }
+           if(tempVal instanceof Character){
+               identifier+= "_character";
+                continue;
+           }
+           if(tempVal instanceof Boolean){
+               identifier+= "_boolean";
+                continue;
+           }
+           if(tempVal instanceof String){
+               identifier+= "_string";
+           }
+       }
+
+       //Obtener la funcion o procedimiento
+       method = track.getMethod(identifier);
+
+       //Pasar los valores de los parametros
+       ((Method)method).setParamsValues(paramsValue);
+
+       //Ejecutar y devolver el valor
+       return method.execute(typeTable, symbolTable, scope, track);
+        
+        
     }
     
 }

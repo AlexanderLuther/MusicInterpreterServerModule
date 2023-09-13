@@ -4,8 +4,6 @@
 
 package com.hluther.musicinterpreter.servermodule;
 
-import com.hluther.controller.AnalysisController;
-import com.hluther.controller.FileController;
 import com.hluther.gui.MusicInterpreterFrame;
 
 /**
@@ -16,7 +14,7 @@ public class MusicInterpreterServerModule {
 
     public static void main(String[] args) {
        MusicInterpreterFrame intepreterFrame = new MusicInterpreterFrame();
-        intepreterFrame.setVisible(true);
+       intepreterFrame.setVisible(true);
 
 
         }

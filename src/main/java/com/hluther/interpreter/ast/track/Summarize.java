@@ -4,6 +4,7 @@ import com.hluther.interpreter.ast.instruction.Node;
 import com.hluther.interpreter.ast.instruction.Instruction;
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
+import com.hluther.interpreter.ast.table.symbolTable.Symbol;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
@@ -93,7 +94,95 @@ public class Summarize extends Node implements Instruction {
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        if(arrayContent == null){
+            Object[] array = (Object[])content.execute(typeTable, symbolTable, scope, track);
+
+            if(array[0]  instanceof Double){
+                double value= 0; 
+                for(int i=0; i< array.length; i++){
+                    value = value + (double)array[i];
+                }
+                return String.valueOf(value);
+            }
+            
+            if(array[0] instanceof Integer){
+                int value= 0; 
+                for(int i=0; i<array.length; i++){
+                    value = value + (int)array[i];
+                }
+                 return String.valueOf(value);
+            }
+            
+            if(array[0] instanceof Character){
+                int value = 0; 
+                for(int i=0; i<array.length; i++){
+                    value = value + (char)array[i];
+                }
+                 return String.valueOf(value);
+            }
+            
+            if(array[0] instanceof Boolean){
+                int value = 0; 
+                for(int i=0; i<array.length; i++){
+                    int temp = (boolean)(boolean)array[i]? 1 : 0;
+                    value = value + temp;
+                }
+                return String.valueOf(value);
+            }
+            
+            if(array[0] instanceof String){
+                String value="";
+                 for(int i=0; i<array.length; i++){
+                    value = value + array[i].toString();
+                }
+                 return  value;
+            }
+            
+            
+        } else{
+            if(arrayContent.getFirst().getFirst().execute(typeTable, symbolTable, scope, track) instanceof Double){
+                double value= 0; 
+                for(int i=0; i<arrayContent.getFirst().size(); i++){
+                    value = value + (double)arrayContent.getFirst().get(i).execute(typeTable, symbolTable, scope, track);
+                }
+                return String.valueOf(value);
+            }
+            
+            if(arrayContent.getFirst().getFirst().execute(typeTable, symbolTable, scope, track) instanceof Integer){
+                int value= 0; 
+                for(int i=0; i<arrayContent.getFirst().size(); i++){
+                    value = value + (int)arrayContent.getFirst().get(i).execute(typeTable, symbolTable, scope, track);
+                }
+                 return String.valueOf(value);
+            }
+            
+            if(arrayContent.getFirst().getFirst().execute(typeTable, symbolTable, scope, track) instanceof Character){
+                int value = 0; 
+                for(int i=0; i<arrayContent.getFirst().size(); i++){
+                    value = value + (char)arrayContent.getFirst().get(i).execute(typeTable, symbolTable, scope, track);
+                }
+                 return String.valueOf(value);
+            }
+            
+            if(arrayContent.getFirst().getFirst().execute(typeTable, symbolTable, scope, track) instanceof Boolean){
+                int value = 0; 
+                for(int i=0; i<arrayContent.getFirst().size(); i++){
+                    int temp = (boolean)(boolean)arrayContent.getFirst().get(i).execute(typeTable, symbolTable, scope, track) ? 1 : 0;
+                    value = value + temp;
+                }
+                return String.valueOf(value);
+            }
+            
+            if(arrayContent.getFirst().getFirst().execute(typeTable, symbolTable, scope, track) instanceof String){
+                String value="";
+                 for(int i=0; i<arrayContent.getFirst().size(); i++){
+                    value = value + arrayContent.getFirst().get(i).execute(typeTable, symbolTable, scope, track).toString();
+                }
+                 return  value;
+            }
+        
+        }
         return null;
     }
 }

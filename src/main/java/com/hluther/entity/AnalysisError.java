@@ -18,7 +18,7 @@ public class AnalysisError {
         this.semanticErrors = new LinkedList();
     }
 
-    public LinkedList getLexicalErrors() {
+    public LinkedList<MError> getLexicalErrors() {
         return lexicalErrors;
     }
 
@@ -26,7 +26,7 @@ public class AnalysisError {
         this.lexicalErrors.addAll(lexicalErrors);
     }
 
-    public LinkedList getSintacticErrors() {
+    public LinkedList<MError> getSintacticErrors() {
         return sintacticErrors;
     }
 
@@ -34,7 +34,7 @@ public class AnalysisError {
         this.sintacticErrors.addAll(sintacticErrors);
     }
 
-    public LinkedList getSemanticErrors() {
+    public LinkedList<MError> getSemanticErrors() {
         return semanticErrors;
     }
 

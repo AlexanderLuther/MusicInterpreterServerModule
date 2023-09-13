@@ -9,6 +9,7 @@ import static com.hluther.interpreter.ast.table.typeTable.SymbolType.INTEGER;
 import static com.hluther.interpreter.ast.table.typeTable.SymbolType.NOT_FOUND;
 import static com.hluther.interpreter.ast.table.typeTable.SymbolType.VOID;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -130,7 +131,46 @@ public class ArrayDeclaration extends Declaration implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        LinkedList dimensionsSize = new LinkedList();
+        int length = 1;
+        int tempSize;
+
+        //Declaracion
+        if(values == null){
+            //Obtener longitud total del arreglo
+            for(Instruction instruction : dimensions){
+                tempSize = (int)instruction.execute(typeTable, symbolTable, scope, track);
+                length = length * tempSize;
+                dimensionsSize.add(tempSize);
+            }
+            symbolTable.add(super.getVarType(), super.getId(), new Object[length], dimensionsSize, SymbolCategory.ARRAY, dimensionsAmount, scope.peek(), false);
+        } 
+        
+        //Declaracion y asignacion
+        else{
+            //Obtener longitud total del arreglo
+            length = values.size() * values.getFirst().size();
+            
+            int counter = 0;
+            Object array[] = new Object[length];
+      
+            //Insetar valores en el arreglo plano
+            for(LinkedList<Instruction> dimension : values){
+                for(Instruction instruction : dimension){
+                    array[counter] = instruction.execute(typeTable, symbolTable, scope, track);
+                    counter++;
+                }
+            }
+            
+            //Insertar dimensiones en la lista de dimensiones
+            for (LinkedList<Instruction> value : values) {
+                dimensionsSize.add(values.getFirst().size());
+            }
+            
+            symbolTable.add(super.getVarType(), super.getId(), array, dimensionsSize, SymbolCategory.ARRAY, dimensionsAmount, scope.peek(), true);
+        }
+        
         return null;
     }
     

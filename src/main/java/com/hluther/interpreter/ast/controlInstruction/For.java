@@ -7,6 +7,7 @@ import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 /**
@@ -32,6 +33,9 @@ public class For extends Node implements Instruction{
     @Override
     public Object analyze(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, AnalysisError errors){        
         SymbolType tempType;
+        
+        //Apilar ambito
+        scope.push(scope.peek() + "_para");
                  
         //Analizar asignacion
         assignment.analyze(typeTable, symbolTable, scope, errors);
@@ -45,9 +49,6 @@ public class For extends Node implements Instruction{
         //Analizar accion
         action.analyze(typeTable, symbolTable, scope, errors);
         
-        //Apilar ambito
-        scope.push(scope.peek() + "_para");
-        
         //Analizar instrucciones for
         for(Instruction instruction : instructions){
             instruction.analyze(typeTable, symbolTable, scope, errors);
@@ -60,7 +61,31 @@ public class For extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Apilar ambito
+        scope.push(scope.peek() + "_para");
+        
+        assignment.execute(typeTable, symbolTable, scope, track);
+        
+        while((boolean)condition.execute(typeTable, symbolTable, scope, track)){
+            
+             for(Instruction instruction : instructions){
+                if(instruction instanceof Break){
+                    return null;
+                }
+                else if(instruction instanceof Continue){
+                    break;
+                }
+                else{
+                    instruction.execute(typeTable, symbolTable, scope, track);
+                }
+            }
+            
+            action.execute(typeTable, symbolTable, scope, track);
+        }
+        
+        //Desapilar ambito
+        scope.pop();
         return null;
     }
 }

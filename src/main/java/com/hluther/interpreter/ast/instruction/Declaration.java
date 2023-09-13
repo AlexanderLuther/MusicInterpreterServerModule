@@ -6,6 +6,7 @@ import com.hluther.interpreter.ast.table.symbolTable.SymbolCategory;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.Stack;
 /**
  *
@@ -137,7 +138,13 @@ public class Declaration extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        if(value == null){
+            symbolTable.add(varType, id, scope.peek());
+        } else{
+            Object val = value.execute(typeTable, symbolTable, scope, track);
+            symbolTable.add(varType, id, val, SymbolCategory.VAR, scope.peek());
+        }
         return null;
     }
     

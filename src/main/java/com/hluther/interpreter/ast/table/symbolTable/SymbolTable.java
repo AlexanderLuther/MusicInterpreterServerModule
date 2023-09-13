@@ -20,7 +20,7 @@ public class SymbolTable extends HashMap<String, Symbol> {
      * @param initialized
      * @return 
      */
-    public boolean add(SymbolType type, String id, SymbolCategory category,  String scope, boolean initialized){
+    public boolean add(SymbolType type, String id, SymbolCategory category, String scope, boolean initialized){
         if(!containsKey(id+"_"+scope)){
             put(id+"_"+scope, new Symbol(id, type, category, scope, initialized));
             return true;
@@ -46,9 +46,29 @@ public class SymbolTable extends HashMap<String, Symbol> {
             return true;
         }
         return false;
-        
     }
-    
+
+    /**
+     * Inserta un simbolo, cuya categoria es ARRAY, en la tabla de simbolos y establece si
+     * esta inicializado o no.
+     * @param type
+     * @param id
+     * @param value
+     * @param dimensionsSize
+     * @param category
+     * @param dimensionsAmount
+     * @param scope
+     * @param initialized
+     * @return 
+     */    
+    public boolean add(SymbolType type, String id, Object value, LinkedList dimensionsSize, SymbolCategory category, int dimensionsAmount, String scope, boolean initialized){
+        if(!containsKey(id+"_"+scope)){
+            put(id+"_"+scope, new Symbol(id, type, value, dimensionsSize, dimensionsAmount, category, scope, initialized));
+            return true;
+        }
+        return false;
+    }
+        
     /**
      * Inserta un simbolo, cuya categoria es PROCEDURE O FUNCTIONA,  en la tabla de simbolos.
      * @param id
@@ -79,14 +99,14 @@ public class SymbolTable extends HashMap<String, Symbol> {
         Symbol temp;
         
         while(!tempStack.isEmpty()){
-            temp = get(id+"_"+tempStack.pop());
+            temp = super.get(id+"_"+tempStack.pop());
             if(temp != null) return temp;
         }
         return null;
     }
     
     
-        public Symbol getLastMethod(Stack<String> scope){        
+    public Symbol getLastMethod(Stack<String> scope){        
         Stack<String> tempStack = new Stack<>();
         tempStack.addAll(scope); 
         Symbol temp;
@@ -101,21 +121,6 @@ public class SymbolTable extends HashMap<String, Symbol> {
         }
         return null;
     }
-    
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     /**
      * Inserta un simbolo sin inicializar en la tabla de simbolos.
@@ -140,9 +145,9 @@ public class SymbolTable extends HashMap<String, Symbol> {
      * @param scope
      * @return 
      */
-    public boolean add(SymbolType typpe, String id, Object value, String scope){
+    public boolean add(SymbolType typpe, String id, Object value, SymbolCategory category, String scope){
         if(!containsKey(id+"_"+scope)){
-            put(id+"_"+scope, new Symbol(id, typpe, SymbolCategory.VAR, value, scope));
+            put(id+"_"+scope, new Symbol(id, typpe, category, value, scope));
             return true;
         }
         return false;
@@ -157,6 +162,27 @@ public class SymbolTable extends HashMap<String, Symbol> {
         Symbol symbol = this.get(id);
         symbol.setValue(value);
         this.replace(id, symbol);
+    }
+    
+    /**
+     * En base a los indices de acceso y las dimensiones de un arreglo multidimensional
+     * retorna el indice correspondiente a un arreglo plano.
+     * @param dimensions
+     * @param indices
+     * @return 
+     */
+    public int getArrayIndex(LinkedList<Integer> dimensions, LinkedList<Integer> indices){
+        int arrayIndex = indices.pop();;
+        dimensions.pop();
+                
+        if(dimensions.isEmpty()){
+            return arrayIndex;
+        }
+        
+        for(int dimension : dimensions){
+             arrayIndex = arrayIndex * dimension;
+        }
+        return arrayIndex + getArrayIndex(dimensions, indices);
     }
     
 }

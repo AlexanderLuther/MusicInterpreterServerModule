@@ -9,24 +9,31 @@ import java.io.IOException;
  *
  * @author helmuth
  */
+import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+/**
+ *
+ * @author alexa
+ */
 public class FileController {
     
     private BufferedReader bufferReader;
+    private FileOutputStream fileOutputStream;
+    private File file;
     private String data;
-    private StringBuffer text = new StringBuffer();
-
-    /*
-    LEER ARCHIVO
-    Metodo que recibe como parametro un path, el cual utiliza para la apertura de 
-    un archivo y su posterior lectura. Devuelve un String con todos los datos 
-    contenidos dentro del archivo.
-    */
+    private String text;
+    
     public String readFile(String path){
+        text = "";
 	try {
             bufferReader = new BufferedReader(new FileReader(path));
             while ((data = bufferReader.readLine()) != null){    
-                text.append(data);
-                text.append("\n");
+                text = text + data + "\n";
             } 
 	}
         catch (EOFException ex) {
@@ -41,11 +48,25 @@ public class FileController {
             } 
             catch (IOException ex) {
 		System.out.println("ERROR: No se pudo cerrar el archivo");
-            } catch(NullPointerException e){
-                System.out.println("ERROR: No se encontro el archivo de entrada. \nSi no existe cree el archivo input.txt y ubiquelo en la carpeta donde se encuentra el ejecutable.");
             }
 	}
-        return text.toString();
+        return text.substring(0, text.length()-1);
+    }
+    
+    public boolean createFile(String path, String data){
+        try {
+            fileOutputStream = null;
+            fileOutputStream = new FileOutputStream(path);
+            fileOutputStream.write(data.getBytes());
+            return true;
+        } 
+        catch (FileNotFoundException ex) {
+            System.out.println("Error al crear el archivo");
+            return false;
+        } catch (IOException ex) {
+            System.out.println("Error al crear el archivo");
+            return false;
+        }
     }
     
 }

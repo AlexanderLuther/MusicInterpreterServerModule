@@ -1,6 +1,5 @@
 package com.hluther.interpreter.ast.method;
 
-import com.hluther.interpreter.ast.method.Method;
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.instruction.Instruction;
@@ -9,6 +8,7 @@ import com.hluther.interpreter.ast.table.symbolTable.SymbolCategory;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 /**
@@ -52,7 +52,20 @@ public class Main extends Method implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Obtener el identidicador unico del metodo principal.
+        String mainId = super.getIdentifier();
+        
+        //Apilar ambito del metodo principal.
+        scope.push(mainId);
+        
+        for(Instruction instruction : super.getInstructions()){
+            instruction.execute(typeTable, symbolTable, scope, track);
+        }
+        
+        //Desapilar el ambito del metodo principal
+        scope.pop();
+        
         return null;
     }
 

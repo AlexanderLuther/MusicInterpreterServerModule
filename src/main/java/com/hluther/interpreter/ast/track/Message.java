@@ -11,7 +11,7 @@ import java.util.Stack;
  *
  * @author helmuth
  */
-public class Message extends Node implements Instruction {
+public class Message extends Node implements Instruction{
     
     private Instruction content;
 
@@ -27,7 +27,13 @@ public class Message extends Node implements Instruction {
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        if(!track.getConsole().getText().isEmpty()  || !track.getConsole().getText().isBlank()){
+            track.getConsole().setText(track.getConsole().getText() +"\n"+content.execute(typeTable, symbolTable, scope, track).toString());
+        }
+        else{
+             track.getConsole().setText((String)content.execute(typeTable, symbolTable, scope, track).toString());
+        }
         return null;
     }
 }

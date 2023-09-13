@@ -133,7 +133,7 @@ start with track;
 
 //---------------   TRACK    ---------------// 
 track::=    TRACK ID:name extend CURLYBRACKETO global_statement:instructions CURLYBRACKETC      {: track = new Track(name, instructions, nameleft, nameright); :}
-            | TRACK ID:name extend CURLYBRACKETO CURLYBRACKETC                                  {: track = new Track(name, nameleft, nameright); :}
+            | TRACK ID:name  extend CURLYBRACKETO CURLYBRACKETC                                        {: track = new Track(name, nameleft, nameright); :}
             //Producciones de error
             | TRACK ID extend CURLYBRACKETO error CURLYBRACKETC
             | TRACK ID extend CURLYBRACKETO error global_statement CURLYBRACKETC
@@ -143,6 +143,7 @@ track::=    TRACK ID:name extend CURLYBRACKETO global_statement:instructions CUR
             ;
 
 extend::=   EXTENDS extends_list
+            | 
             ;
 
 extends_list::=     extends_list COMMA ID
@@ -503,8 +504,8 @@ relational_op::=    arithmetic_op:value1 ISEQUAL:o arithmetic_op:value2         
                     | arithmetic_op:value1 LESSTHAN:o arithmetic_op:value2                {: RESULT = new Operation(value1, value2, OperationType.LESSTHAN, oleft, oright); :}
                     | arithmetic_op:value1 GREATERTHANOREQUALTO:o arithmetic_op:value2    {: RESULT = new Operation(value1, value2, OperationType.GREATERTHANOREQUALTO, oleft, oright); :}
                     | arithmetic_op:value1 LESSTHANOREQUALTO:o arithmetic_op:value2       {: RESULT = new Operation(value1, value2, OperationType.LESSTHANOREQUALTO, oleft, oright); :}
-                    | ISNULL:o ID:value array_dimensions:dimensions                       {: RESULT = new Operation(new Operation(value, dimensions, valueleft, valueright), OperationType.ISNULL, oleft, oright); :} 
-                    | ISNULL:o ID:value                                                   {: RESULT = new Operation(new Operation(value, OperationType.ID, valueleft, valueright), OperationType.ISNULL, oleft, oright); :}
+                    | ISNULL:o ID:value array_dimensions:dimensions                       {: RESULT = new Operation(new Operation(value, dimensions, OperationType.NULL_VAR, valueleft, valueright), OperationType.ISNULL, oleft, oright); :} 
+                    | ISNULL:o ID:value                                                   {: RESULT = new Operation(new Operation(value, OperationType.NULL_VAR, valueleft, valueright), OperationType.ISNULL, oleft, oright); :}
                     | arithmetic_op:value                                                 {: RESULT = value; :}
                     ;
 

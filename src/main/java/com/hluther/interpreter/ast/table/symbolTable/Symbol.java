@@ -16,6 +16,7 @@ public class Symbol {
     private boolean initialized;
     private int paramnsAmount;
     private LinkedList<SymbolType> paramsType;
+     private LinkedList arrayDimensions;
     
     //Arrays
     private int dimensionsAmount;
@@ -44,6 +45,21 @@ public class Symbol {
         this.category = category;
         this.scope = scope;
         this.initialized = initialized;
+    }
+    
+     public Symbol(String id, SymbolType type, Object value, LinkedList dimensionsize,  int dimensionsAmount, SymbolCategory category, String scope, boolean initialized) {
+        this.id = id;
+        this.type = type;
+        this.dimensionsAmount = dimensionsAmount;
+        this.category = category;
+        this.scope = scope;
+        this.initialized = initialized;
+        this.value = value;
+        this.arrayDimensions = dimensionsize;
+    }
+
+    public LinkedList getArrayDimensions() {
+        return arrayDimensions;
     }
 
     public int getDimensionsAmount() {

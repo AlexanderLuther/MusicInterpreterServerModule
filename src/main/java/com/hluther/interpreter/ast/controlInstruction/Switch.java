@@ -6,6 +6,7 @@ import com.hluther.entity.AnalysisError;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -61,7 +62,34 @@ public class Switch extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Apilar ambito 
+        scope.push(scope.peek() + "_switch");
+        int caseId = 0;
+        Object tempVal = id.execute(typeTable, symbolTable, scope, track);
+        boolean executeDefault = true;
+        
+        Object caseReturn;
+        for(Instruction instruction : cases){
+            ((Case)instruction).setVarValue(tempVal);
+            ((Case)instruction).setCaseId(caseId);
+            caseId++;
+            caseReturn = instruction.execute(typeTable, symbolTable, scope, track);
+            
+            if(caseReturn instanceof Break){
+                executeDefault = false;
+                break;
+            }
+                
+        }
+        
+        if(executeDefault && defaultCase!= null){
+            defaultCase.execute(typeTable, symbolTable, scope, track);
+        }
+            
+        //Desapilar ambito
+        scope.pop();
+        
         return null;
     }
 

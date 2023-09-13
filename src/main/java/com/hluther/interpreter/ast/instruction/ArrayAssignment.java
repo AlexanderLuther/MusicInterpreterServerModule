@@ -1,7 +1,5 @@
 package com.hluther.interpreter.ast.instruction;
 
-import com.hluther.interpreter.ast.instruction.Node;
-import com.hluther.interpreter.ast.instruction.Instruction;
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.table.symbolTable.Symbol;
@@ -12,6 +10,7 @@ import static com.hluther.interpreter.ast.table.typeTable.SymbolType.INTEGER;
 import static com.hluther.interpreter.ast.table.typeTable.SymbolType.NOT_FOUND;
 import static com.hluther.interpreter.ast.table.typeTable.SymbolType.VOID;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -98,7 +97,24 @@ public class ArrayAssignment extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        
+        //Obtener indices de acceso al arreglo
+        LinkedList<Integer> arrayIndices = new LinkedList();
+        for(Instruction instruction : dimensions){
+            arrayIndices.add((int)instruction.execute(typeTable, symbolTable, scope, track));  
+        }
+
+        //Obtener simbolo de la tabla de simbolos
+        Symbol sym = symbolTable.get(id, scope);
+        
+        
+        //Obtener indice plano del arreglo
+        int arrayIndex = symbolTable.getArrayIndex(new LinkedList<>(sym.getArrayDimensions()), arrayIndices);   
+        
+        //Modificar el valor del array
+         ((Object[])sym.getValue())[arrayIndex] = value.execute(typeTable, symbolTable, scope, track);
+         
         return null;
     }
     

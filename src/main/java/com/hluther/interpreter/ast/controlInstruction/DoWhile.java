@@ -7,6 +7,7 @@ import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -51,7 +52,28 @@ public class DoWhile extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Apilar ambito
+        scope.push(scope.peek() + "_hacer");
+        
+        do{
+             for(Instruction instruction : instructions){
+                if(instruction instanceof Break){
+                    return null;
+                }
+                else if(instruction instanceof Continue){
+                    break;
+                }
+                else{
+                    instruction.execute(typeTable, symbolTable, scope, track);
+                }
+            }
+        } while((boolean)condition.execute(typeTable, symbolTable, scope, track));
+        
+        //Desapilar ambito
+        scope.pop();
+        
+        
         return null;
     }
 }

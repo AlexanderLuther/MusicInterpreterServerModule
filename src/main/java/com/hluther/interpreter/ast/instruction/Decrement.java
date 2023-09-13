@@ -1,12 +1,13 @@
 package com.hluther.interpreter.ast.instruction;
 
-import com.hluther.interpreter.ast.instruction.Node;
-import com.hluther.interpreter.ast.instruction.Instruction;
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
+import com.hluther.interpreter.ast.operation.Operation;
+import com.hluther.interpreter.ast.table.symbolTable.Symbol;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.Stack;
 
 /**
@@ -34,7 +35,21 @@ public class Decrement extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+         String identifier = ((Operation)id).getValue().toString();
+         Symbol sym = symbolTable.get(identifier,  scope);
+        
+        switch(sym.getType()){
+            case DOUBLE ->{
+                sym.setValue((double)sym.getValue() - 1);
+            }
+            case INTEGER ->{
+                sym.setValue((int)sym.getValue() - 1);
+            }
+            case CHARACTER ->{
+                sym.setValue((char)sym.getValue() - 1);
+            }
+        }
         return null;
     }
     

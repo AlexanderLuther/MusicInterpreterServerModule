@@ -1,14 +1,13 @@
 package com.hluther.interpreter.ast.method;
 
-import com.hluther.interpreter.ast.method.Method;
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.instruction.Instruction;
-import com.hluther.interpreter.ast.instruction.Return;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolCategory;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 /**
@@ -56,7 +55,27 @@ public class Procedure extends Method implements Instruction {
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Apilar ambito
+        scope.push(super.getIdentifier());
+        
+        //Establecer el valor de cada uno de los parametros
+        for(int i=0; i < super.getParams().size(); i++){
+            ((Param)super.getParams().get(i)).setValue(super.getParamsValues().get(i));
+        }
+        
+        //Ingresar parametros a la tabla de simbolos
+        for(Instruction param : super.getParams()){
+            param.execute(typeTable, symbolTable, scope, track);
+        }
+        
+        //Ejecutar instrucciones
+        for(Instruction instruction : super.getInstructions()){
+            instruction.execute(typeTable, symbolTable, scope, track);
+        }
+        
+        //Desapilar ambito
+        scope.pop();
         return null;
     }
     

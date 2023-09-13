@@ -1,15 +1,10 @@
 package com.hluther.controller;
 
 import com.hluther.entity.AnalysisError;
-import com.hluther.entity.MError;
 import com.hluther.interpreter.lexer.TrackLexer;
 import com.hluther.interpreter.parser.TrackParser;
 import com.hluther.interpreter.ast.track.Track;
-import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
-import com.hluther.interpreter.ast.table.typeTable.SymbolType;
-import com.hluther.interpreter.ast.table.typeTable.TypeTable;
 import java.io.StringReader;
-import java.util.Stack;
 /**
  *
  * @author helmuth
@@ -17,50 +12,38 @@ import java.util.Stack;
 public class AnalysisController {
     
     private AnalysisError analysisError;
+    private Track track;
 
-    public AnalysisController() {
-        this.analysisError = new AnalysisError();
-    }
+    public AnalysisController() {}
     
-    public void analyzeTrackInput(String inputData){
+    public void analyzeTrack(String inputData){
         try {
+            analysisError = new AnalysisError();
             TrackLexer lexer = new TrackLexer(new StringReader(inputData));
             TrackParser parser = new TrackParser(lexer);
             parser.parse();
             
+            //Obtener errores Lexicos, Semanticos y Sintacticos encontrados.
             analysisError.addLexicalErrors(lexer.getLexicalErrors());
             analysisError.addSemanticErrors(lexer.getSemanticErrors());
             analysisError.addSintacticErrors(parser.getSyntacticErrors());
             
-            
-            
-            Track track = parser.getTrack();
-            
-            track.analyze(new TypeTable(), new SymbolTable(), new Stack<>(),  analysisError);
-            
-            System.out.println("ERRORES LEXICOS");
-             for(Object error : analysisError.getLexicalErrors()){
-                System.out.println("Columna:"+((MError)error).getColumn() +" Linea:"+((MError)error).getLine()+" "+((MError)error).getError() + " " + ((MError)error).getLexeme());
-            }
-             
-            System.out.println("ERRORES SINCTACTICOS");
-             for(Object error : analysisError.getSintacticErrors()){
-                System.out.println("Columna:"+((MError)error).getColumn() +" Linea:"+((MError)error).getLine()+" "+((MError)error).getError() + " " + ((MError)error).getLexeme());
-            }
-          
-            System.out.println("ERRORES SEMANTICOS");
-            for(Object error : analysisError.getSemanticErrors()){
-                System.out.println(((MError)error).getColumn() +" "+((MError)error).getLine()+" "+((MError)error).getError() +" "+ ((MError)error).getLexeme());
-            }
-           
+            //retornar  el ast creador por la traduccion dirigida por la sintaxis.
+            track = parser.getTrack();
+                      
         } catch (Exception ex) {
-            System.out.println("Error ejecutando el analisis." + ex.getMessage());
+            System.out.println("Error ejecutando el analisis. No se pudo generar el AST." + ex.getMessage());
         }
     }
 
     public AnalysisError getAnalysisError() {
         return analysisError;
     }
+
+    public Track getTrack() {
+        return track;
+    }
+    
     
 }
 

@@ -15,6 +15,7 @@ import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
 import com.hluther.interpreter.ast.track.Length;
 import com.hluther.interpreter.ast.track.Summarize;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 /**
@@ -106,7 +107,7 @@ public class Operation extends Node implements Instruction {
     }
     
     /**
-     * STRING | ID | CALL | ARRAY_ALL
+     * STRING | ID | CALL | ARRAY_ALL | NULL_VAR
      * @param value
      * @param operationType
      * @param row
@@ -117,6 +118,20 @@ public class Operation extends Node implements Instruction {
         this.value = value;
         this.operationType = operationType;
         System.out.println(operationType.toString().toLowerCase());
+    }
+    
+    /**
+     * NULL_VAR
+     * @param value 
+     * @param dimensions 
+     * @param row
+     * @param column 
+     */
+    public Operation(String value, LinkedList<Instruction> dimensions, OperationType operationType, int row, int column){
+        super(row, column);
+        this.value = value;
+        this.dimensions = dimensions;
+        this.operationType = operationType;
     }
     
     /**
@@ -197,6 +212,22 @@ public class Operation extends Node implements Instruction {
                         errors.addSemanticError(new MError("Variable no inicializada.", value.toString(), super.getRow(), super.getColumn()));
                     } 
                     return temp.getType();
+                }
+                errors.addSemanticError(new MError("Variable no existe", value.toString(), super.getRow(), super.getColumn()));
+                return SymbolType.NOT_FOUND;
+            }
+            
+            case NULL_VAR ->{
+                temp = symbolTable.get(value.toString(), scope);
+                if(temp != null){
+                    if(temp.getCategory() == SymbolCategory.ARRAY){
+                        //Validar cantidad de indices del arreglo con indices proporcionados.
+                        if(dimensions.size() != temp.getDimensionsAmount()){
+                            errors.addSemanticError(new MError("La cantidad de dimensiones proporcionada no coincide con la cantidad de dimensiones del arreglo.", value.toString(), super.getRow(), super.getColumn()));
+                        }
+                    }
+                    
+                    return SymbolType.BOOLEAN;
                 }
                 errors.addSemanticError(new MError("Variable no existe", value.toString(), super.getRow(), super.getColumn()));
                 return SymbolType.NOT_FOUND;
@@ -488,9 +519,7 @@ public class Operation extends Node implements Instruction {
                 if(tempType == SymbolType.VOID || tempType == SymbolType.STRING){
                     errors.addSemanticError(new MError("Operacion no valida.", "Operador matematico sobre operando izquierdo de tipo "+typeTable.get(tempType).getName() +".", super.getRow(), super.getColumn()));
                 }
-
-                if(tempType == SymbolType.DOUBLE) return tempType;
-                return SymbolType.INTEGER;     
+                return SymbolType.DOUBLE;     
             } 
             
             case ISEQUAL, NOTEQUAL, GREATERTHAN, LESSTHAN, GREATERTHANOREQUALTO, LESSTHANOREQUALTO ->{
@@ -548,7 +577,7 @@ public class Operation extends Node implements Instruction {
             
             case ISNULL ->{
                 leftOperator.analyze(typeTable, symbolTable, scope, errors);
-                if(((Operation)leftOperator).getType() != OperationType.ID && ((Operation)leftOperator).getType() != OperationType.ARRAY){
+                if(((Operation)leftOperator).getType() != OperationType.NULL_VAR){
                     errors.addSemanticError(new MError("Operacion no valida.", "Operador relacional aplicable unicamente sobre variables.", super.getRow(), super.getColumn()));
                 }
                 return SymbolType.BOOLEAN;
@@ -590,9 +619,654 @@ public class Operation extends Node implements Instruction {
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        Object leftValue;
+        Object rightValue;
+         switch(operationType){
+             
+            case INTEGER, DOUBLE, CHAR, BOOLEAN -> {
+                return value; 
+            }
+            
+            case STRING -> {
+                return ((String)value).replaceAll("\"", ""); 
+            }
+            
+            case ALL_ARRAY ->{
+                return symbolTable.get(value.toString(), scope).getValue();
+            }
+                
+            case ID -> { 
+                return symbolTable.get(value.toString(), scope).getValue();
+            }
+            
+            case NULL_VAR -> {
+                //Variable
+                if(dimensions == null){
+                    Symbol sym = symbolTable.get(value.toString(), scope);
+                    return !sym.isInitialized();   
+                }
+                //Arreglo
+                else{
+                    //Obtener indices de acceso al arreglo
+                    LinkedList<Integer> arrayIndices = new LinkedList();
+                    for(Instruction instruction : dimensions){
+                        arrayIndices.add((int)instruction.execute(typeTable, symbolTable, scope, track));  
+                    }
+                    
+                    //Obtener indice plano del arreglo
+                    int arrayIndex = symbolTable.getArrayIndex(new LinkedList<>(symbolTable.get(value.toString(), scope).getArrayDimensions()), arrayIndices);                    
+                   
+                    return ((Object[])symbolTable.get(value.toString(), scope).getValue())[arrayIndex] == null;
+                }
+            }
+            
+            case CALL ->{     
+                return leftOperator.execute(typeTable, symbolTable, scope, track);
+            }
+            
+            case ARRAY ->{
+                //Obtener indices de acceso al arreglo
+                LinkedList<Integer> arrayIndices = new LinkedList();
+                for(Instruction instruction : dimensions){
+                    arrayIndices.add((int)instruction.execute(typeTable, symbolTable, scope, track));  
+                }
+
+                //Obtener indice plano del arreglo
+                int arrayIndex = symbolTable.getArrayIndex(new LinkedList<>(symbolTable.get(value.toString(), scope).getArrayDimensions()), arrayIndices);     
+                Object tempValue = ((Object[])symbolTable.get(value.toString(), scope).getValue())[arrayIndex];
+                
+                //Si el valor del arreglo en los indices indicados es null, enviar un valor por defecto.
+                if(tempValue == null){
+                    switch (symbolTable.get(value.toString(), scope).getType()) {
+                        case DOUBLE -> {
+                            return 0.0;
+                        }
+                        case INTEGER -> {
+                            return 0;
+                        }
+                        case CHARACTER -> {
+                            return ' ';
+                        }
+                        case BOOLEAN -> {
+                            return true;
+                        }
+                        case STRING -> {
+                            return "";
+                        }
+                    }
+                }
+                
+                return tempValue; 
+            }
+            
+            case PLUS ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                if(leftValue instanceof Double) return (double)leftValue;
+                if(leftValue instanceof Integer) return (int)leftValue;
+                if(leftValue instanceof Character) return (char)leftValue;
+                if(leftValue instanceof Boolean){
+                     int temp = (boolean)leftValue ? 1 : 0;
+                       return temp;
+                }
+            }
+            
+             case MINUS ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                if(leftValue instanceof Double) return -(double)leftValue;
+                if(leftValue instanceof Integer) return -(int)leftValue;
+                if(leftValue instanceof Character) return -(char)leftValue;
+                if(leftValue instanceof Boolean){
+                     int temp = (boolean)leftValue ? 1 : 0;
+                       return -temp;
+                }
+            }
+            
+            case SUM ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                   
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue + (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue + (int)rightValue;
+                    if(rightValue instanceof Character) return (double)leftValue + (char)rightValue;  
+                    if(rightValue instanceof Boolean){
+                       int temp = (boolean)rightValue ? 1 : 0;
+                       return (double)leftValue + temp;
+                    }
+                    if(rightValue instanceof String) return leftValue.toString() + rightValue.toString();    
+                    return (double)leftValue + (double)rightValue;
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue + (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue + (int)rightValue;
+                    if(rightValue instanceof Character) return (int)leftValue + (char)rightValue;  
+                    if(rightValue instanceof Boolean){
+                       int temp = (boolean)rightValue ? 1 : 0;
+                       return (int)leftValue + temp;
+                    }
+                    if(rightValue instanceof String) return leftValue.toString() + rightValue.toString(); 
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue + (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue + (int)rightValue;
+                    if(rightValue instanceof Character) return (char)leftValue + (char)rightValue;  
+                    if(rightValue instanceof Boolean){
+                       int temp = (boolean)rightValue ? 1 : 0;
+                       return (char)leftValue + temp;
+                    }
+                    if(rightValue instanceof String) return leftValue.toString() + rightValue.toString(); 
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp + (double)rightValue;
+                    if(rightValue instanceof Integer) return temp + (int)rightValue;
+                    if(rightValue instanceof Character) return temp + (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp + temp2;
+                    }    
+                    if(rightValue instanceof String) return leftValue.toString() + rightValue.toString(); 
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return leftValue.toString() + rightValue.toString();
+                }
+            }
+            
+            case SUBTRACTION -> {
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue - (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue - (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue - (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue - temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue - (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue - (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue - (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue - temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue - (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue - (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue - (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue - temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp - (double)rightValue;
+                    if(rightValue instanceof Integer) return temp - (int)rightValue;
+                    if(rightValue instanceof Character) return temp - (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp - temp2;
+                    }    
+                }
+            }
+            
+            case MULTIPLICATION -> {
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue * (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue * (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue * (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue * temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue * (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue * (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue * (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue * temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue * (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue * (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue * (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue * temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp * (double)rightValue;
+                    if(rightValue instanceof Integer) return temp * (int)rightValue;
+                    if(rightValue instanceof Character) return temp * (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp * temp2;
+                    }    
+                }
+            }
+            
+            case DIVISION -> {
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue / (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue / (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue / (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue / temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue / (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue / (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue / (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue / temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue / (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue / (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue / (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue / temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp / (double)rightValue;
+                    if(rightValue instanceof Integer) return temp / (int)rightValue;
+                    if(rightValue instanceof Character) return temp / (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp / temp2;
+                    }    
+                }
+            }
+            
+            case MOD ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                return (int)leftValue % (int)rightValue; 
+            }
+            
+            case POTENTIATION->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                if(leftValue instanceof Double) return Math.pow((double)leftValue, (int)rightValue);
+                if(leftValue instanceof Integer)return Math.pow((int)leftValue, (int)rightValue);
+                if(leftValue instanceof Character) return Math.pow((char)leftValue, (int)rightValue);
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    return (int)Math.pow(temp, (int)rightValue);
+                }
+            }
+            
+            case ISEQUAL ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue == (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue == (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue == (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue == temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue == (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue == (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue == (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue == temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue == (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue == (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue == (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue == temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp == (double)rightValue;
+                    if(rightValue instanceof Integer) return temp == (int)rightValue;
+                    if(rightValue instanceof Character) return temp == (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp == temp2;
+                    }    
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return leftValue.toString().equals(rightValue.toString());
+                }
+            }
+            
+            case NOTEQUAL ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue != (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue != (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue != (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue != temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue != (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue != (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue != (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue != temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue != (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue != (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue != (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue != temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp != (double)rightValue;
+                    if(rightValue instanceof Integer) return temp != (int)rightValue;
+                    if(rightValue instanceof Character) return temp != (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp != temp2;
+                    }    
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return !leftValue.toString().equals(rightValue.toString());
+                }
+            }
+            
+            case GREATERTHAN ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue > (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue > (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue > (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue > temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue > (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue > (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue > (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue > temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue > (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue > (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue > (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue > temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp > (double)rightValue;
+                    if(rightValue instanceof Integer) return temp > (int)rightValue;
+                    if(rightValue instanceof Character) return temp > (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp > temp2;
+                    }    
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return leftValue.toString().length() > rightValue.toString().length();
+                }
+            }
+            
+            case LESSTHAN ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue < (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue < (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue < (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue < temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue < (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue < (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue < (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue < temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue < (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue < (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue < (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue < temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp < (double)rightValue;
+                    if(rightValue instanceof Integer) return temp < (int)rightValue;
+                    if(rightValue instanceof Character) return temp < (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp < temp2;
+                    }    
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return leftValue.toString().length() < rightValue.toString().length();
+                }
+            }
+            
+            case  GREATERTHANOREQUALTO ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue >= (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue >= (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue >= (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue >= temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue >= (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue >= (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue >= (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue >= temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue >= (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue >= (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue >= (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue >= temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp >= (double)rightValue;
+                    if(rightValue instanceof Integer) return temp >= (int)rightValue;
+                    if(rightValue instanceof Character) return temp >= (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp >= temp2;
+                    }    
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return leftValue.toString().length() >= rightValue.toString().length();
+                }   
+            }
+            
+            case LESSTHANOREQUALTO ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                //Double to
+                if(leftValue instanceof Double){
+                    if(rightValue instanceof Double) return (double)leftValue <= (double)rightValue;
+                    if(rightValue instanceof Integer) return (double)leftValue <= (int)rightValue;  
+                    if(rightValue instanceof Character) return (double)leftValue <= (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (double)leftValue <= temp;
+                    }
+                }
+                //Integer to
+                if(leftValue instanceof Integer){
+                    if(rightValue instanceof Double) return (int)leftValue <= (double)rightValue;
+                    if(rightValue instanceof Integer) return (int)leftValue <= (int)rightValue;  
+                    if(rightValue instanceof Character) return (int)leftValue <= (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (int)leftValue <= temp;
+                    }
+                }
+                //Character to
+                if(leftValue instanceof Character){
+                    if(rightValue instanceof Double) return (char)leftValue <= (double)rightValue;
+                    if(rightValue instanceof Integer) return (char)leftValue <= (int)rightValue;  
+                    if(rightValue instanceof Character) return (char)leftValue <= (char)rightValue;
+                    if(rightValue instanceof Boolean){
+                         int temp = (boolean)rightValue ? 1 : 0;
+                         return (char)leftValue <= temp;
+                    }
+                }
+                //Boolean to
+                if(leftValue instanceof Boolean){
+                    int temp = (boolean)leftValue ? 1 : 0;
+                    if(rightValue instanceof Double) return temp <= (double)rightValue;
+                    if(rightValue instanceof Integer) return temp <= (int)rightValue;
+                    if(rightValue instanceof Character) return temp <= (char)rightValue;  
+                    if(rightValue instanceof Boolean) {
+                        int temp2 = (boolean)rightValue ? 1 : 0;
+                        return temp <= temp2;
+                    }    
+                }
+                //String to
+                if(leftValue instanceof String){
+                    return leftValue.toString().length() <= rightValue.toString().length();
+                }
+            }
+            
+            case ISNULL ->{
+                return (boolean)leftOperator.execute(typeTable, symbolTable, scope, track);
+            }
+            
+            case AND ->{
+                return  (boolean)leftOperator.execute(typeTable, symbolTable, scope, track) && (boolean)rightOperator.execute(typeTable, symbolTable, scope, track);
+            }
+            
+            case NAND->{
+                return  !((boolean)leftOperator.execute(typeTable, symbolTable, scope, track) && (boolean)rightOperator.execute(typeTable, symbolTable, scope, track));
+            }
+            
+            case OR ->{
+                return  (boolean)leftOperator.execute(typeTable, symbolTable, scope, track) || (boolean)rightOperator.execute(typeTable, symbolTable, scope, track);
+            }
+            
+            case NOR ->{
+                return  !((boolean)leftOperator.execute(typeTable, symbolTable, scope, track) || (boolean)rightOperator.execute(typeTable, symbolTable, scope, track));
+            }
+            
+            case XOR ->{
+                leftValue = leftOperator.execute(typeTable, symbolTable, scope, track);
+                rightValue = rightOperator.execute(typeTable, symbolTable, scope, track);
+                return ((boolean)leftValue || (boolean)rightValue) & !((boolean)leftValue && (boolean)rightValue);
+            }
+            
+            case NOT ->{
+               return !(boolean)leftOperator.execute(typeTable, symbolTable, scope, track);
+            }
+        
+        }
         return null;
     }
-    
+ 
     
 }

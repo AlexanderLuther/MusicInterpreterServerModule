@@ -1,7 +1,5 @@
 package com.hluther.interpreter.ast.instruction;
 
-import com.hluther.interpreter.ast.instruction.Node;
-import com.hluther.interpreter.ast.instruction.Instruction;
 import com.hluther.entity.AnalysisError;
 import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.table.symbolTable.Symbol;
@@ -10,6 +8,7 @@ import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import static com.hluther.interpreter.ast.table.typeTable.SymbolType.NOT_FOUND;
 import static com.hluther.interpreter.ast.table.typeTable.SymbolType.VOID;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.Stack;
 /**
  *
@@ -68,7 +67,13 @@ public class Assignment extends Node implements Instruction {
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Obtener desde tabla de simbolos
+        Symbol sym = symbolTable.get(id, scope);
+        
+        //Modificar valor
+        sym.setValue(value.execute(typeTable, symbolTable, scope, track));
+        
         return null;
     }
 }

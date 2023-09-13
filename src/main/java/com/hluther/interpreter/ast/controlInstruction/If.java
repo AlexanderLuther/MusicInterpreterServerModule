@@ -7,6 +7,7 @@ import com.hluther.entity.MError;
 import com.hluther.interpreter.ast.table.symbolTable.SymbolTable;
 import com.hluther.interpreter.ast.table.typeTable.SymbolType;
 import com.hluther.interpreter.ast.table.typeTable.TypeTable;
+import com.hluther.interpreter.ast.track.Track;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -51,7 +52,10 @@ public class If extends Node implements Instruction{
         scope.pop();
 
         //Analizar elseif
+        int counter = 0;
         for(Instruction instruction : elseIfs){
+            ((ElseIf)instruction).setId(counter);
+            counter++;
             instruction.analyze(typeTable, symbolTable, scope, errors);
         }
         
@@ -62,7 +66,29 @@ public class If extends Node implements Instruction{
     }
     
     @Override
-    public Object execute(TypeTable typeTable, SymbolTable symbolTable){
+    public Object execute(TypeTable typeTable, SymbolTable symbolTable, Stack<String> scope, Track track){
+        //Apilar ambito
+        scope.push(scope.peek() + "_si");
+        
+        int counter = 0;
+        if((boolean)condition.execute(typeTable, symbolTable, scope, track)){
+            for(Instruction instruction : instructions){
+                    instruction.execute(typeTable, symbolTable, scope, track);
+            }
+        }else{
+            //Desapilar ambito
+            scope.pop();
+            for(Instruction instruction : elseIfs){
+                ((ElseIf)instruction).setId(counter);
+                counter++;
+                if((boolean)instruction.execute(typeTable, symbolTable, scope, track)){
+                    break;
+                }
+            }
+            
+            if(elseInstruction != null) elseInstruction.execute(typeTable, symbolTable, scope, track);
+        }
+       
         return null;
     }
     
